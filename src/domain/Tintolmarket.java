@@ -39,15 +39,26 @@ public class Tintolmarket {
 			ObjectInputStream inStream = new ObjectInputStream(sslSocket.getInputStream());
 			Scanner clientInterface = new Scanner(System.in);
 
-			outStream.writeObject(args[1]); // userID
+			outStream.writeObject(args[1]); // userID = pedido de autenticacao
 
-			if (args.length == 2) {
-				System.out.println("Password:");
-				String password = clientInterface.nextLine();
-				outStream.writeObject(password);
-			} else {
-				outStream.writeObject(args[2]); // password
+			//receber o nonce. verificar a resposta de quando o utilizador é desconhecido
+			Long nonce = null;
+			try {
+				nonce = (Long) inStream.readObject();
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
 			}
+			System.out.println("nonce: " + nonce);
+			
+			//Nao sei se a password cifra é a password de autenticacao, mas este codigo verificava se a pass era passada como argumento,
+			//alterado temporariamente para receber na linha de comandos
+//			if (args.length == 2) {
+			System.out.println("Password:");
+			String password = clientInterface.nextLine();
+			outStream.writeObject(password);
+//			} else {
+//				outStream.writeObject(args[2]); // password
+//			}
 
 			try {
 

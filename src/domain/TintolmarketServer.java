@@ -18,6 +18,8 @@ import javax.net.ServerSocketFactory;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 
+import domain.Nonce;
+
 import catalogs.MessageCatalog;
 import catalogs.SellsCatalog;
 import catalogs.UserCatalog;
@@ -76,7 +78,6 @@ public class TintolmarketServer {
 			try {
 				new ClientHandler(sslServerSocket.accept()).start();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 
@@ -213,14 +214,22 @@ public class TintolmarketServer {
 
 				try {
 					clientID = (String) inStream.readObject();
-					password = (String) inStream.readObject();
+//					password = (String) inStream.readObject();
 				} catch (ClassNotFoundException e1) {
 					e1.printStackTrace();
 				}
+				
+				if (userCatalog.exists(clientID)) {
+					Nonce nonce = Nonce.getInstance();
+					outStream.writeObject(nonce.getNonce());
+				}
+				
 
 				File usersCatalog = new File(USERSCATFILE);
 				File userWallets = new File(WALLETFILE);
 
+				
+				//aqui o userCatalog ta encriptado e nos temos de o desencriptar
 				if (userCatalog.exists(clientID)) {
 					if (!userCatalog.getUserByID(clientID).isPasswordCorrect(password)) {
 						outStream.writeObject("erroPass");
