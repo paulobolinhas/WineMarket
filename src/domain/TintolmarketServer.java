@@ -253,11 +253,7 @@ public class TintolmarketServer {
 
 						boolean isSignValid = authValidator.verifySignature(nonceFromClient, signature);
 						
-						if (isSignValid) {
-							outStream.writeObject("true");
-						} else {
-							outStream.writeObject("false");
-						}
+						outStream.writeObject(isSignValid);
 						
 					} catch (ClassNotFoundException | KeyStoreException | NoSuchAlgorithmException | CertificateException | InvalidKeyException | SignatureException e) {
 						System.out.println("ERRO - Um problema ocorreu com a validacao da autenticacao.");
