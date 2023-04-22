@@ -1,4 +1,4 @@
-package domain;
+package Entities;
 import java.util.Random;
 
 public class Nonce {

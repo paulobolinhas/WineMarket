@@ -52,65 +52,73 @@ public class Tintolmarket {
 
 			outStream.writeObject(userID); // userID = pedido de autenticacao
 
-			//receber o nonce. verificar a resposta de quando o utilizador é desconhecido
-			Long nonceFromServer = null;
+			boolean clientExists = false;
+
 			try {
-				nonceFromServer = (Long) inStream.readObject();
-				System.out.println("nonce recebido do servidor: " + nonceFromServer);
+				clientExists = (boolean) inStream.readObject();
 			} catch (ClassNotFoundException e) {
 				e.printStackTrace();
 			}
-			
-			//assinar o nonce com a chave privada
-			KeyStore clientKeyStore = null;
-			PrivateKey privateKey = null;
-			Signature signature = null;
-			try {
-				
-				clientKeyStore = KeyStore.getInstance("JKS"); 
-				signature = Signature.getInstance("SHA256withRSA"); //verificar o algoritmo
-				
-				clientKeyStore.load(new FileInputStream("src//keys//"+keyStoreAlias), passKeyStoreString.toCharArray());
-				privateKey = (PrivateKey)clientKeyStore.getKey(keyStoreAlias, passKeyStoreString.toCharArray()); //nao sei se estes parametros sao os certos
-				
-				signature.initSign(privateKey);
-				signature.update(nonceFromServer.toString().getBytes());
-				
-				outStream.writeObject(nonceFromServer);
-				outStream.writeObject(signature.sign());
-				
-			} catch (KeyStoreException e) {
-				e.printStackTrace();
-			} catch (NoSuchAlgorithmException e) {
-				e.printStackTrace();
-			} catch (CertificateException e) {
-				e.printStackTrace();
-			} catch (UnrecoverableKeyException e) {
-				e.printStackTrace();
-			} catch (InvalidKeyException e) {
-				e.printStackTrace();
-			} catch (SignatureException e) {
-				e.printStackTrace();
+
+			if (clientExists) {
+
+				//receber o nonce. verificar a resposta de quando o utilizador é desconhecido
+				Long nonceFromServer = null;
+				try {
+					nonceFromServer = (Long) inStream.readObject();
+					System.out.println("nonce recebido do servidor: " + nonceFromServer);
+				} catch (ClassNotFoundException e) {
+					e.printStackTrace();
+				}
+
+				//assinar o nonce com a chave privada
+				KeyStore clientKeyStore = null;
+				PrivateKey privateKey = null;
+				Signature signature = null;
+				try {
+
+					clientKeyStore = KeyStore.getInstance("JKS"); 
+					signature = Signature.getInstance("SHA256withRSA"); //verificar o algoritmo
+
+					clientKeyStore.load(new FileInputStream("src//keys//"+keyStoreAlias), passKeyStoreString.toCharArray());
+					privateKey = (PrivateKey)clientKeyStore.getKey(keyStoreAlias, passKeyStoreString.toCharArray()); //nao sei se estes parametros sao os certos
+
+					signature.initSign(privateKey);
+					signature.update(nonceFromServer.toString().getBytes());
+
+					outStream.writeObject(nonceFromServer);
+					outStream.writeObject(signature.sign());
+
+				} catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | UnrecoverableKeyException | InvalidKeyException | SignatureException e) {
+					e.printStackTrace();
+				} 
 			}
-			
-			String msgValid = "";
+
+			boolean msgValid = false;
 			try {
-				msgValid = (String) inStream.readObject();
+				msgValid = (boolean) inStream.readObject();
 			} catch (ClassNotFoundException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			
+
+			if (!msgValid) {
+				clientInterface.close();
+				inStream.close();
+				outStream.close();
+				sslSocket.close();
+				System.exit(0);
+			}
+
 			System.out.println("Mensagem valida? " + msgValid);
-			
+
 			//em principio deve ser para assumir q a pass é passada na consola
-//			if (args.length == 2) {
+			//			if (args.length == 2) {
 			System.out.println("Password:");
 			String password = clientInterface.nextLine();
 			outStream.writeObject(password);
-//			} else {
-//				outStream.writeObject(args[2]); // password
-//			}
+			//			} else {
+			//				outStream.writeObject(args[2]); // password
+			//			}
 
 			try {
 
@@ -183,18 +191,18 @@ public class Tintolmarket {
 			System.out.println("I/O error: " + ex.getMessage());
 		}
 	}
-	
+
 	private static byte[] longToBytes(long x) {
-	    ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
-	    buffer.putLong(x);
-	    return buffer.array();
+		ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+		buffer.putLong(x);
+		return buffer.array();
 	}
 
 	private static long bytesToLong(byte[] bytes) {
-	    ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
-	    buffer.put(bytes);
-	    buffer.flip();//need flip 
-	    return buffer.getLong();
+		ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+		buffer.put(bytes);
+		buffer.flip();//need flip 
+		return buffer.getLong();
 	}
 
 }

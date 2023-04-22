@@ -28,7 +28,7 @@ import javax.net.ServerSocketFactory;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 
-
+import Entities.AuthenticationValidator;
 import catalogs.MessageCatalog;
 import catalogs.SellsCatalog;
 import catalogs.UserCatalog;
@@ -63,7 +63,7 @@ public class TintolmarketServer {
 		String passwordCifra = args[1];
 		String serverKeystore = args[2];
 		String passwordServerKeystore = args[3];
-		
+
 		if (args.length == 4) {
 			port = Integer.parseInt(args[0]);
 		}
@@ -220,54 +220,60 @@ public class TintolmarketServer {
 				System.out.println("New client connected.");
 				String clientID = null;
 				String password = null;
-
+				boolean clientExists = false;
+				
 				try {
 					clientID = (String) inStream.readObject();
 					System.out.println("Cliente com ID " + clientID + " quer autenticar-se");
-//					password = (String) inStream.readObject();
 				} catch (ClassNotFoundException e1) {
 					e1.printStackTrace();
 				}
+
+				clientExists = userCatalog.exists(clientID);
 				
-				if (userCatalog.exists(clientID)) {
-					Nonce generatedNonce = Nonce.getInstance();
-					outStream.writeObject((Long) generatedNonce.getNonce());
-					System.out.println("Enviado Nonce");
-				}
+				//indicar o cliente se ele existe ou nao
+				outStream.writeObject(clientExists);
 				
-				try {
-					Long nonceFromClient = (Long) inStream.readObject();
-					byte[] signature = (byte[]) inStream.readObject();
+				AuthenticationValidator authValidator = new AuthenticationValidator(inStream, outStream);
+
+				if (clientExists) {
 					
-					System.out.println("nonce recebido do cliente: " + nonceFromClient);
-					
-					FileInputStream trustStoreFile = new FileInputStream("src//keys//truststore");
-					KeyStore trustStore = KeyStore.getInstance("JKS");
-					trustStore.load(trustStoreFile, "truststore".toCharArray());
-					
-					Certificate clientCertificate = trustStore.getCertificate("client"+clientID+"Keys");
-					PublicKey clientPublicKey = clientCertificate.getPublicKey();
-					
-					Signature s = Signature.getInstance("SHA256withRSA");
-					s.initVerify(clientPublicKey);
-					s.update(nonceFromClient.toString().getBytes()); // isto deve estar mal
-					
-					if (s.verify(signature)) {
-						outStream.writeObject("true");
-					} else {
-						outStream.writeObject("false");
+					authValidator.sendNonce();
+
+					try {
+						Long nonceFromClient = authValidator.receiveNonce();
+						System.out.println("Nonce recebido do cliente: " + nonceFromClient);
+						
+						byte[] signature = authValidator.receiveSignature();
+						System.out.println("Assinatura do cliente recebida: " + nonceFromClient);
+						
+						authValidator.loadTrustStore();
+						
+						authValidator.loadCertificateAndPublicKey(clientID);
+
+						boolean isSignValid = authValidator.verifySignature(nonceFromClient, signature);
+						
+						if (isSignValid) {
+							outStream.writeObject("true");
+						} else {
+							outStream.writeObject("false");
+						}
+						
+					} catch (ClassNotFoundException | KeyStoreException | NoSuchAlgorithmException | CertificateException | InvalidKeyException | SignatureException e) {
+						System.out.println("ERRO - Um problema ocorreu com a validacao da autenticacao.");
+						e.printStackTrace();
 					}
-					
-				} catch (ClassNotFoundException | KeyStoreException | NoSuchAlgorithmException | CertificateException | InvalidKeyException | SignatureException e) {
-					e.printStackTrace();
+
+				} else {
+
 				}
-				
+
 
 				File usersCatalog = new File(USERSCATFILE);
 				File userWallets = new File(WALLETFILE);
 
-				
-				//aqui o userCatalog ta encriptado e nos temos de o desencriptar
+
+				//apagar isto
 				if (userCatalog.exists(clientID)) {
 					if (!userCatalog.getUserByID(clientID).isPasswordCorrect(password)) {
 						outStream.writeObject("erroPass");
@@ -480,7 +486,7 @@ public class TintolmarketServer {
 					for (Sell sell : wineSales) {
 						if (sell.getQuantity() > 0) {
 							result.append(" Seller: " + sell.getSeller() + "; Value: " + sell.getValue()
-									+ "; Quantity: " + sell.getQuantity() + "\n");
+							+ "; Quantity: " + sell.getQuantity() + "\n");
 						}
 					}
 				}
@@ -755,7 +761,7 @@ public class TintolmarketServer {
 							String newContentBuy = oldContent.replace(wineFileLine, newStringBuy);
 							newContentWithoutNewLine = newContentBuy.substring(0, newContentBuy.length() - 2);
 							sellsCatalog.getSale(wineFileLineSplitted[0], wineFileLineSplitted[4])
-									.setQuantity(Integer.parseInt(wineFileLineSplitted[3]) - quantity);
+							.setQuantity(Integer.parseInt(wineFileLineSplitted[3]) - quantity);
 							break;
 
 						case "sell":
@@ -767,7 +773,7 @@ public class TintolmarketServer {
 							String newContentSell = oldContent.replace(wineFileLine, newStringSell);
 							newContentWithoutNewLine = newContentSell.substring(0, newContentSell.length() - 2);
 							sellsCatalog.getSale(wineFileLineSplitted[0], wineFileLineSplitted[4])
-									.setQuantity(Integer.parseInt(wineFileLineSplitted[3]) + quantity);
+							.setQuantity(Integer.parseInt(wineFileLineSplitted[3]) + quantity);
 							sellsCatalog.getSale(wineFileLineSplitted[0], wineFileLineSplitted[4]).setValue(value);
 							break;
 
@@ -781,7 +787,7 @@ public class TintolmarketServer {
 									newContentSellDifPrice.length() - 2);
 
 							sellsCatalog.getSale(wineFileLineSplitted[0], wineFileLineSplitted[4])
-									.setQuantity(quantity);
+							.setQuantity(quantity);
 							sellsCatalog.getSale(wineFileLineSplitted[0], wineFileLineSplitted[4]).setValue(value);
 							break;
 
