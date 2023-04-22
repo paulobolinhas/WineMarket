@@ -10,10 +10,13 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Scanner;
+
+import javax.net.ServerSocketFactory;
+import javax.net.ssl.SSLServerSocket;
+import javax.net.ssl.SSLServerSocketFactory;
 
 import catalogs.MessageCatalog;
 import catalogs.SellsCatalog;
@@ -33,7 +36,8 @@ public class TintolmarketServer {
 	public static WineCatalog wineCatalog;
 	private static MessageCatalog messageCatalog;
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
+
 		System.out.println("servidor: main");
 
 		userCatalog = UserCatalog.getUserCatalog();
@@ -42,41 +46,41 @@ public class TintolmarketServer {
 		messageCatalog = MessageCatalog.getMessageCatalog();
 
 		TintolmarketServer tintolServer = new TintolmarketServer();
+
+		// TintolmarketServer <port> <password-cifra> <keystore> <password-keystore>
 		int port = 12345;
-		if (args.length == 1)
+		String passwordCifra = args[1];
+		String serverKeystore = args[2];
+		String passwordServerKeystore = args[3];
+
+		if (args.length == 4) {
 			port = Integer.parseInt(args[0]);
-		tintolServer.startServer(port);
+		}
+
+		System.setProperty("javax.net.ssl.keyStore", "src//keys//" + serverKeystore);
+		System.setProperty("javax.net.ssl.keyStorePassword", passwordServerKeystore);
+		ServerSocketFactory ssf = SSLServerSocketFactory.getDefault();
+		SSLServerSocket sslServerSocket = (SSLServerSocket) ssf.createServerSocket(port);
+
+		tintolServer.startServer(sslServerSocket);
 	}
 
 	@SuppressWarnings("resource")
-	public void startServer(int port) {
-		ServerSocket tintolSocket = null;
+	public void startServer(SSLServerSocket sslServerSocket) {
+
 		initializeMemory();
 
-		try {
-
-			tintolSocket = new ServerSocket(port);
-			tintolSocket.setReuseAddress(true);
-
-		} catch (IOException e) {
-			System.err.println(e.getMessage());
-			System.exit(-1);
-		}
-
+		// uma thread por ligação
 		while (true) {
+
 			try {
-
-				Socket inSocket = tintolSocket.accept();
-				System.out.println("New client connected " + inSocket.getInetAddress().getHostAddress());
-				ClientHandler clientSock = new ClientHandler(inSocket);
-				clientSock.start();
-
+				new ClientHandler(sslServerSocket.accept()).start();
 			} catch (IOException e) {
+				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 
 		}
-
 	}
 
 	protected void initializeMemory() {
@@ -188,8 +192,8 @@ public class TintolmarketServer {
 		private ObjectOutputStream outStream;
 		private ObjectInputStream inStream;
 
-		ClientHandler(Socket tintolSocket) {
-			socket = tintolSocket;
+		ClientHandler(Socket sslServerSocket) {
+			socket = sslServerSocket;
 
 			try {
 				outStream = new ObjectOutputStream(socket.getOutputStream());
@@ -203,6 +207,7 @@ public class TintolmarketServer {
 		public void run() {
 			try {
 
+				System.out.println("New client connected.");
 				String clientID = null;
 				String password = null;
 
