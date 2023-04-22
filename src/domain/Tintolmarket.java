@@ -1,9 +1,20 @@
 package domain;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
+import java.security.InvalidKeyException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.Signature;
+import java.security.SignatureException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 import java.util.Scanner;
 
 import javax.net.SocketFactory;
@@ -25,8 +36,8 @@ public class Tintolmarket {
 			port = Integer.parseInt(ipport[1]);
 
 		String trustStore = args[1];
-		String keyStore = args[2];
-		String passwordKeystore = args[3];
+		String keyStoreAlias = args[2];
+		String passKeyStoreString = args[3];
 		String userID = args[4];
 
 		System.setProperty("javax.net.ssl.trustStore", "src//keys//" + trustStore);
@@ -39,19 +50,60 @@ public class Tintolmarket {
 			ObjectInputStream inStream = new ObjectInputStream(sslSocket.getInputStream());
 			Scanner clientInterface = new Scanner(System.in);
 
-			outStream.writeObject(args[1]); // userID = pedido de autenticacao
+			outStream.writeObject(userID); // userID = pedido de autenticacao
 
 			//receber o nonce. verificar a resposta de quando o utilizador é desconhecido
-			Long nonce = null;
+			Long nonceFromServer = null;
 			try {
-				nonce = (Long) inStream.readObject();
+				nonceFromServer = (Long) inStream.readObject();
+				System.out.println("nonce recebido do servidor: " + nonceFromServer);
 			} catch (ClassNotFoundException e) {
 				e.printStackTrace();
 			}
-			System.out.println("nonce: " + nonce);
 			
-			//Nao sei se a password cifra é a password de autenticacao, mas este codigo verificava se a pass era passada como argumento,
-			//alterado temporariamente para receber na linha de comandos
+			//assinar o nonce com a chave privada
+			KeyStore clientKeyStore = null;
+			PrivateKey privateKey = null;
+			Signature signature = null;
+			try {
+				
+				clientKeyStore = KeyStore.getInstance("JKS"); 
+				signature = Signature.getInstance("SHA256withRSA"); //verificar o algoritmo
+				
+				clientKeyStore.load(new FileInputStream("src//keys//"+keyStoreAlias), passKeyStoreString.toCharArray());
+				privateKey = (PrivateKey)clientKeyStore.getKey(keyStoreAlias, passKeyStoreString.toCharArray()); //nao sei se estes parametros sao os certos
+				
+				signature.initSign(privateKey);
+				signature.update(nonceFromServer.toString().getBytes());
+				
+				outStream.writeObject(nonceFromServer);
+				outStream.writeObject(signature.sign());
+				
+			} catch (KeyStoreException e) {
+				e.printStackTrace();
+			} catch (NoSuchAlgorithmException e) {
+				e.printStackTrace();
+			} catch (CertificateException e) {
+				e.printStackTrace();
+			} catch (UnrecoverableKeyException e) {
+				e.printStackTrace();
+			} catch (InvalidKeyException e) {
+				e.printStackTrace();
+			} catch (SignatureException e) {
+				e.printStackTrace();
+			}
+			
+			String msgValid = "";
+			try {
+				msgValid = (String) inStream.readObject();
+			} catch (ClassNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			System.out.println("Mensagem valida? " + msgValid);
+			
+			//em principio deve ser para assumir q a pass é passada na consola
 //			if (args.length == 2) {
 			System.out.println("Password:");
 			String password = clientInterface.nextLine();
@@ -130,6 +182,19 @@ public class Tintolmarket {
 
 			System.out.println("I/O error: " + ex.getMessage());
 		}
+	}
+	
+	private static byte[] longToBytes(long x) {
+	    ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+	    buffer.putLong(x);
+	    return buffer.array();
+	}
+
+	private static long bytesToLong(byte[] bytes) {
+	    ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+	    buffer.put(bytes);
+	    buffer.flip();//need flip 
+	    return buffer.getLong();
 	}
 
 }

@@ -11,14 +11,23 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.security.InvalidKeyException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.Signature;
+import java.security.SignatureException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.io.FileInputStream;
 
 import javax.net.ServerSocketFactory;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 
-import domain.Nonce;
 
 import catalogs.MessageCatalog;
 import catalogs.SellsCatalog;
@@ -214,14 +223,43 @@ public class TintolmarketServer {
 
 				try {
 					clientID = (String) inStream.readObject();
+					System.out.println("Cliente com ID " + clientID + " quer autenticar-se");
 //					password = (String) inStream.readObject();
 				} catch (ClassNotFoundException e1) {
 					e1.printStackTrace();
 				}
 				
 				if (userCatalog.exists(clientID)) {
-					Nonce nonce = Nonce.getInstance();
-					outStream.writeObject(nonce.getNonce());
+					Nonce generatedNonce = Nonce.getInstance();
+					outStream.writeObject((Long) generatedNonce.getNonce());
+					System.out.println("Enviado Nonce");
+				}
+				
+				try {
+					Long nonceFromClient = (Long) inStream.readObject();
+					byte[] signature = (byte[]) inStream.readObject();
+					
+					System.out.println("nonce recebido do cliente: " + nonceFromClient);
+					
+					FileInputStream trustStoreFile = new FileInputStream("src//keys//truststore");
+					KeyStore trustStore = KeyStore.getInstance("JKS");
+					trustStore.load(trustStoreFile, "truststore".toCharArray());
+					
+					Certificate clientCertificate = trustStore.getCertificate("client"+clientID+"Keys");
+					PublicKey clientPublicKey = clientCertificate.getPublicKey();
+					
+					Signature s = Signature.getInstance("SHA256withRSA");
+					s.initVerify(clientPublicKey);
+					s.update(nonceFromClient.toString().getBytes()); // isto deve estar mal
+					
+					if (s.verify(signature)) {
+						outStream.writeObject("true");
+					} else {
+						outStream.writeObject("false");
+					}
+					
+				} catch (ClassNotFoundException | KeyStoreException | NoSuchAlgorithmException | CertificateException | InvalidKeyException | SignatureException e) {
+					e.printStackTrace();
 				}
 				
 
