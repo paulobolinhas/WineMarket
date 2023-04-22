@@ -14,6 +14,7 @@ import java.security.PrivateKey;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.UnrecoverableKeyException;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.util.Scanner;
 
@@ -36,7 +37,7 @@ public class Tintolmarket {
 		hostname = ipport[0];
 		if (ipport.length == 2)
 			port = Integer.parseInt(ipport[1]);
-
+		
 		String trustStore = args[1];
 		String keyStoreAlias = args[2];
 		String passKeyStoreString = args[3];
@@ -62,60 +63,53 @@ public class Tintolmarket {
 				e.printStackTrace();
 			}
 
+		
 			ClientAuthentication clientAuth = new ClientAuthentication(inStream, outStream);
+			Long nonceFromServer = null;
 			
-			if (clientExistsFlag) {
-
-				//receber o nonce. verificar a resposta de quando o utilizador é desconhecido
-				Long nonceFromServer = null;
-				try {
-					nonceFromServer = clientAuth.receiveNonce();
-					System.out.println("nonce recebido do servidor: " + nonceFromServer);
-				} catch (ClassNotFoundException e) {
-					e.printStackTrace();
+			PrivateKey privateKey = null;
+			
+			try {
+				
+				nonceFromServer = clientAuth.receiveNonce();
+				System.out.println("nonce recebido do servidor: " + nonceFromServer);
+	
+				privateKey = clientAuth.loadKSAndPK(keyStoreAlias, passKeyStoreString);
+				clientAuth.SendSignature(nonceFromServer, privateKey); 
+				
+				if (!clientExistsFlag) {
+					Certificate certificate = clientAuth.getCertificate(keyStoreAlias);
+					
+					clientAuth.sendCertificate(certificate);
 				}
-			
-				try {
-
-					PrivateKey privateKey = clientAuth.loadTSAndPK(keyStoreAlias, passKeyStoreString);
-					clientAuth.SendSignature(nonceFromServer, privateKey);
 				
-
-				} catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | UnrecoverableKeyException | InvalidKeyException | SignatureException e) {
-					System.out.println("ERRO - Problema na autenticacao do lado do cliente");
-					e.printStackTrace();
-				} 
-			} else {
-				
-				//no caso em que nao existe tem de enviar o certificado publico
-				
+			} catch (ClassNotFoundException | UnrecoverableKeyException | KeyStoreException | NoSuchAlgorithmException | CertificateException | InvalidKeyException | SignatureException e) {
+				e.printStackTrace();
 			}
 			
-			boolean msgValid = false;
+			
+			boolean isClientValid = false;
 			try {
-				msgValid = (boolean) inStream.readObject();
+				isClientValid = (boolean) inStream.readObject();
 			} catch (ClassNotFoundException e) {
 				e.printStackTrace();
 			}
 
-			if (!msgValid) {
+			if (!isClientValid) {
+				System.out.println("Cliente Corrompido! A fechar o cliente");
 				clientInterface.close();
 				inStream.close();
 				outStream.close();
 				sslSocket.close();
 				System.exit(0);
 			}
-
-			System.out.println("Cliente autentico? " + msgValid);
-
-			//em principio deve ser para assumir q a pass é passada na consola
-			//			if (args.length == 2) {
-			System.out.println("Password:");
-			String password = clientInterface.nextLine();
-			outStream.writeObject(password);
-			//			} else {
-			//				outStream.writeObject(args[2]); // password
-			//			}
+			
+			if (!clientExistsFlag)
+				try {
+					System.out.println((String) inStream.readObject());
+				} catch (ClassNotFoundException e) {
+					e.printStackTrace();
+				}
 
 			try {
 

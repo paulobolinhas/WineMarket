@@ -46,7 +46,7 @@ public class TintolmarketServer {
 
 		System.out.println("servidor: main");
 
-		userCatalog = UserCatalog.getUserCatalog();
+		userCatalog = UserCatalog.getInstance(USERSCATFILE, WALLETFILE);
 		sellsCatalog = SellsCatalog.getSellsCatalog();
 		wineCatalog = WineCatalog.getWineCatalog();
 		messageCatalog = MessageCatalog.getMessageCatalog();
@@ -214,9 +214,8 @@ public class TintolmarketServer {
 
 				System.out.println("New client connected.");
 				String clientID = null;
-				String password = null;
 				boolean clientExistsFlag = false;
-				
+
 				try {
 					clientID = (String) inStream.readObject();
 					System.out.println("Cliente com ID " + clientID + " quer autenticar-se");
@@ -224,89 +223,58 @@ public class TintolmarketServer {
 					e1.printStackTrace();
 				}
 
+				String certificadoStr = "client"+clientID+"KeyRSApub.cer";
 				clientExistsFlag = userCatalog.exists(clientID);
-	
+
 				//indicar o cliente se ele existe ou nao
 				outStream.writeObject(clientExistsFlag);
-				
+
 				AuthenticationValidator authValidator = new AuthenticationValidator(inStream, outStream);
+				authValidator.sendNonce();
 
-				if (clientExistsFlag) {
+				try {
 					
-					authValidator.sendNonce();
+					Long nonceFromClient = authValidator.receiveNonce();
+					System.out.println("Nonce recebido do cliente: " + nonceFromClient);
+					
+					byte[] signature = authValidator.receiveSignature();
+					System.out.println("Assinatura do cliente recebida");
+					
+					Certificate certificate = null;
+					
+					if (clientExistsFlag) {
+						String certificateStr = userCatalog.getCertificadoByID(clientID);
+						certificate = authValidator.getCertificate(certificateStr);
+					} else {
+						certificate = authValidator.getCertificate();
+					}
+	
+					authValidator.loadPublicKey(certificate);
+					
+					boolean isClientValid = authValidator.verifySignature(nonceFromClient, signature);
+					outStream.writeObject(isClientValid);
+					
+					if (!isClientValid) {
+						System.out.println("Cliente Corrompido! A fechar o servidor");
+						exitFunc(inStream, outStream, socket);
+					}
+		
+					if (!clientExistsFlag) {
 
-					try {
-						Long nonceFromClient = authValidator.receiveNonce();
-						System.out.println("Nonce recebido do cliente: " + nonceFromClient);
+						userCatalog.registNewUser(clientID, certificadoStr);
+						userCatalog.registNewWallet(clientID);
+						userCatalog.add(new User(clientID, certificadoStr));
 						
-						byte[] signature = authValidator.receiveSignature();
-						System.out.println("Assinatura do cliente recebida: " + nonceFromClient);
-						
-						
-						String certificadoStr = userCatalog.getCertificadoByID(clientID);
-						
-						Certificate certificado = authValidator.getCertificate(certificadoStr);
-						
-						authValidator.loadPublicKey(certificado);
-
-						boolean isSignValid = authValidator.verifySignature(nonceFromClient, signature);
-						
-						outStream.writeObject(isSignValid);
-
-					} catch (ClassNotFoundException | KeyStoreException | NoSuchAlgorithmException | InvalidKeyException | SignatureException | CertificateException e) {
-						System.out.println("ERRO - Um problema ocorreu com a validacao da autenticacao.");
-						e.printStackTrace();
+						outStream.writeObject("Novo cliente " + clientID + " registado");
 					}
 
-				
-				} else {
-
+				} catch (ClassNotFoundException | KeyStoreException | NoSuchAlgorithmException | InvalidKeyException | SignatureException | CertificateException e) {
+					System.out.println("ERRO - Um problema ocorreu com a validacao da autenticacao.");
+					e.printStackTrace();
 				}
 
 
-				File usersCatalog = new File(USERSCATFILE);
-				File userWallets = new File(WALLETFILE);
 
-
-				//apagar isto
-				if (userCatalog.exists(clientID)) {
-//					if (!userCatalog.getUserByID(clientID).isPasswordCorrect(password)) {
-//						outStream.writeObject("erroPass");
-//						exitFunc(inStream, outStream, socket);
-//					} else {
-//						outStream.writeObject("registado");
-//					}
-				} else {
-					outStream.writeObject("NovoRegisto");
-
-					String newClient = "";
-					if (userCatalog.getSize() == 0) {
-						newClient = new StringBuilder().append(clientID + ":" + password).toString();
-					} else {
-						newClient = new StringBuilder().append("\n" + clientID + ":" + password).toString();
-					}
-
-					OutputStream clientRegister = new FileOutputStream(usersCatalog, true);
-					synchronized (clientRegister) {
-						clientRegister.write(newClient.getBytes(), 0, newClient.length());
-						clientRegister.close();
-					}
-
-					String usersBalance = "";
-					if (userCatalog.getSize() == 0) {
-						usersBalance = new StringBuilder().append(clientID + ":200").toString();
-					} else {
-						usersBalance = new StringBuilder().append("\n" + clientID + ":200").toString();
-					}
-					OutputStream wallet = new FileOutputStream(userWallets, true);
-					synchronized (wallet) {
-						wallet.write(usersBalance.getBytes(), 0, usersBalance.length());
-						wallet.close();
-					}
-
-					userCatalog.add(new User(clientID, password));
-
-				}
 
 				interactWUser(clientID);
 

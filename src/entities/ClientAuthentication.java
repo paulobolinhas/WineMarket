@@ -12,6 +12,7 @@ import java.security.PrivateKey;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.UnrecoverableKeyException;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 
 public class ClientAuthentication {
@@ -29,7 +30,7 @@ public class ClientAuthentication {
 		return (Long) inStream.readObject();
 	}
 	
-	public PrivateKey loadTSAndPK(String keyStoreAlias, String passKeyStoreString) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException, UnrecoverableKeyException {
+	public PrivateKey loadKSAndPK(String keyStoreAlias, String passKeyStoreString) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException, UnrecoverableKeyException {
 		this.clientKeyStore = KeyStore.getInstance("JKS");
 		this.clientKeyStore.load(new FileInputStream("src//keys//"+keyStoreAlias), passKeyStoreString.toCharArray());
 		return (PrivateKey)this.clientKeyStore.getKey(keyStoreAlias, passKeyStoreString.toCharArray());
@@ -42,6 +43,14 @@ public class ClientAuthentication {
 
 		this.outStream.writeObject(nonceFromServer);
 		this.outStream.writeObject(signature.sign());
+	}
+	
+	public Certificate getCertificate(String keyStoreAlias) throws KeyStoreException {
+		return this.clientKeyStore.getCertificate(keyStoreAlias);
+	}
+
+	public void sendCertificate(Certificate certificate) throws IOException {
+		this.outStream.writeObject(certificate); //será que passar o objecto funciona ou tenho de o passar para bytes?
 	}
 	
 }

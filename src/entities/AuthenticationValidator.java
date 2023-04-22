@@ -1,7 +1,6 @@
 package entities;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -21,7 +20,6 @@ public class AuthenticationValidator {
 	private ObjectInputStream inStream;
 	private ObjectOutputStream outStream;
 	
-	private KeyStore trustStore;
 	private PublicKey clientPublicKey;
 	
 	public AuthenticationValidator(ObjectInputStream inStream, ObjectOutputStream outStream) {
@@ -32,7 +30,6 @@ public class AuthenticationValidator {
 	public void sendNonce() throws IOException {
 		Nonce generatedNonce = Nonce.getInstance();
 		this.outStream.writeObject((Long) generatedNonce.getNonce());
-		System.out.println("Servidor->Cliente");
 	}
 	
 	public Long receiveNonce() throws ClassNotFoundException, IOException {
@@ -43,10 +40,25 @@ public class AuthenticationValidator {
 		return (byte[]) inStream.readObject();
 	}
 	
-	public Certificate getCertificate(String certificateName) throws KeyStoreException, FileNotFoundException, CertificateException {
-		FileInputStream is = new FileInputStream("src//keys//"+certificateName);
+	public Certificate getCertificate() throws KeyStoreException, CertificateException, IOException, ClassNotFoundException {
+		return (Certificate) this.inStream.readObject();
+		//		String path = "src/certificates/"+certificateName;
+//		System.out.println(path);
+//		FileInputStream is = new FileInputStream(path);
+//		CertificateFactory cf = CertificateFactory.getInstance("X.509");
+//		Certificate c = cf.generateCertificate(is);
+//		is.close();
+//		return c;
+	}
+	
+	public Certificate getCertificate(String certificateName) throws KeyStoreException, CertificateException, IOException, ClassNotFoundException {
+		String path = "src/certificates/"+certificateName;
+		System.out.println(path);
+		FileInputStream is = new FileInputStream(path);
 		CertificateFactory cf = CertificateFactory.getInstance("X.509");
-		return cf.generateCertificate(is);
+		Certificate c = cf.generateCertificate(is);
+		is.close();
+		return c;
 	}
 	
 	public PublicKey getPublicKey(Certificate certificate) {
@@ -66,5 +78,9 @@ public class AuthenticationValidator {
 		s.initVerify(this.clientPublicKey);
 		s.update(nonceFromClient.toString().getBytes());
 		return s.verify(signature);
+	}
+	
+	public Certificate receiveCertificate() throws ClassNotFoundException, IOException {
+		return (Certificate) inStream.readObject();
 	}
 }
