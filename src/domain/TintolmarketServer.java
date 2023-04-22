@@ -52,7 +52,7 @@ public class TintolmarketServer {
 		String passwordCifra = args[1];
 		String serverKeystore = args[2];
 		String passwordServerKeystore = args[3];
-
+		
 		if (args.length == 4) {
 			port = Integer.parseInt(args[0]);
 		}
