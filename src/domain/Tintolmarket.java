@@ -21,6 +21,8 @@ import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
+import entities.ClientAuthentication;
+
 public class Tintolmarket {
 
 	public static void main(String[] args) {
@@ -43,7 +45,7 @@ public class Tintolmarket {
 		System.setProperty("javax.net.ssl.trustStore", "src//keys//" + trustStore);
 		System.setProperty("javax.net.ssl.trustStorePassword", trustStore);
 		SocketFactory sf = SSLSocketFactory.getDefault();
-
+		
 		try (SSLSocket sslSocket = (SSLSocket) sf.createSocket(hostname, port)) {
 
 			ObjectOutputStream outStream = new ObjectOutputStream(sslSocket.getOutputStream());
@@ -52,48 +54,43 @@ public class Tintolmarket {
 
 			outStream.writeObject(userID); // userID = pedido de autenticacao
 
-			boolean clientExists = false;
+			boolean clientExistsFlag = false;
 
 			try {
-				clientExists = (boolean) inStream.readObject();
+				clientExistsFlag = (boolean) inStream.readObject();
 			} catch (ClassNotFoundException e) {
 				e.printStackTrace();
 			}
 
-			if (clientExists) {
+			ClientAuthentication clientAuth = new ClientAuthentication(inStream, outStream);
+			
+			if (clientExistsFlag) {
 
 				//receber o nonce. verificar a resposta de quando o utilizador é desconhecido
 				Long nonceFromServer = null;
 				try {
-					nonceFromServer = (Long) inStream.readObject();
+					nonceFromServer = clientAuth.receiveNonce();
 					System.out.println("nonce recebido do servidor: " + nonceFromServer);
 				} catch (ClassNotFoundException e) {
 					e.printStackTrace();
 				}
-
-				//assinar o nonce com a chave privada
-				KeyStore clientKeyStore = null;
-				PrivateKey privateKey = null;
-				Signature signature = null;
+			
 				try {
 
-					clientKeyStore = KeyStore.getInstance("JKS"); 
-					signature = Signature.getInstance("SHA256withRSA"); //verificar o algoritmo
-
-					clientKeyStore.load(new FileInputStream("src//keys//"+keyStoreAlias), passKeyStoreString.toCharArray());
-					privateKey = (PrivateKey)clientKeyStore.getKey(keyStoreAlias, passKeyStoreString.toCharArray()); //nao sei se estes parametros sao os certos
-
-					signature.initSign(privateKey);
-					signature.update(nonceFromServer.toString().getBytes());
-
-					outStream.writeObject(nonceFromServer);
-					outStream.writeObject(signature.sign());
+					PrivateKey privateKey = clientAuth.loadTSAndPK(keyStoreAlias, passKeyStoreString);
+					clientAuth.SendSignature(nonceFromServer, privateKey);
+				
 
 				} catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | UnrecoverableKeyException | InvalidKeyException | SignatureException e) {
+					System.out.println("ERRO - Problema na autenticacao do lado do cliente");
 					e.printStackTrace();
 				} 
+			} else {
+				
+				//no caso em que nao existe tem de enviar o certificado publico
+				
 			}
-
+			
 			boolean msgValid = false;
 			try {
 				msgValid = (boolean) inStream.readObject();
@@ -109,7 +106,7 @@ public class Tintolmarket {
 				System.exit(0);
 			}
 
-			System.out.println("Mensagem valida? " + msgValid);
+			System.out.println("Cliente autentico? " + msgValid);
 
 			//em principio deve ser para assumir q a pass é passada na consola
 			//			if (args.length == 2) {

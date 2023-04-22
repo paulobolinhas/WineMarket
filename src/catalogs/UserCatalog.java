@@ -16,17 +16,16 @@ public class UserCatalog {
 	public static UserCatalog getUserCatalog() {
 		if (instance == null)
 			instance = new UserCatalog();
-
+		
 		return instance;
 	}
 
 	public synchronized User getUserByID(String id) {
 
-		for (User w : userCatalog) {
-			if (w.getID().equals(id))
-				return w;
-		}
-
+		for (User u : userCatalog) 
+			if (u.getID().equals(id))
+				return u;
+		
 		return null;
 
 	}
@@ -45,6 +44,13 @@ public class UserCatalog {
 
 	public synchronized int getSize() {
 		return userCatalog.size();
+	}
+	
+	public synchronized String getCertificadoByID(String ID) {
+		for (User u: this.userCatalog)
+			if(u.getID().equals(ID))
+				return u.getCertificado();
+		return null;
 	}
 
 }

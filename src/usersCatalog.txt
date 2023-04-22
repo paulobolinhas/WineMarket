@@ -1,2 +1,2 @@
 truststore:clientKeystore
-1:pass1
+1:client1KeyRSApub.cer

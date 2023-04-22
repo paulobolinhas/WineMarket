@@ -12,27 +12,22 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.security.InvalidKeyException;
-import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.PublicKey;
-import java.security.Signature;
 import java.security.SignatureException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Scanner;
-import java.io.FileInputStream;
-
 import javax.net.ServerSocketFactory;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 
-import Entities.AuthenticationValidator;
 import catalogs.MessageCatalog;
 import catalogs.SellsCatalog;
 import catalogs.UserCatalog;
 import catalogs.WineCatalog;
+import entities.AuthenticationValidator;
 
 public class TintolmarketServer {
 
@@ -220,7 +215,7 @@ public class TintolmarketServer {
 				System.out.println("New client connected.");
 				String clientID = null;
 				String password = null;
-				boolean clientExists = false;
+				boolean clientExistsFlag = false;
 				
 				try {
 					clientID = (String) inStream.readObject();
@@ -229,14 +224,14 @@ public class TintolmarketServer {
 					e1.printStackTrace();
 				}
 
-				clientExists = userCatalog.exists(clientID);
-				
+				clientExistsFlag = userCatalog.exists(clientID);
+	
 				//indicar o cliente se ele existe ou nao
-				outStream.writeObject(clientExists);
+				outStream.writeObject(clientExistsFlag);
 				
 				AuthenticationValidator authValidator = new AuthenticationValidator(inStream, outStream);
 
-				if (clientExists) {
+				if (clientExistsFlag) {
 					
 					authValidator.sendNonce();
 
@@ -247,19 +242,23 @@ public class TintolmarketServer {
 						byte[] signature = authValidator.receiveSignature();
 						System.out.println("Assinatura do cliente recebida: " + nonceFromClient);
 						
-						authValidator.loadTrustStore();
 						
-						authValidator.loadCertificateAndPublicKey(clientID);
+						String certificadoStr = userCatalog.getCertificadoByID(clientID);
+						
+						Certificate certificado = authValidator.getCertificate(certificadoStr);
+						
+						authValidator.loadPublicKey(certificado);
 
 						boolean isSignValid = authValidator.verifySignature(nonceFromClient, signature);
 						
 						outStream.writeObject(isSignValid);
-						
-					} catch (ClassNotFoundException | KeyStoreException | NoSuchAlgorithmException | CertificateException | InvalidKeyException | SignatureException e) {
+
+					} catch (ClassNotFoundException | KeyStoreException | NoSuchAlgorithmException | InvalidKeyException | SignatureException | CertificateException e) {
 						System.out.println("ERRO - Um problema ocorreu com a validacao da autenticacao.");
 						e.printStackTrace();
 					}
 
+				
 				} else {
 
 				}
@@ -271,12 +270,12 @@ public class TintolmarketServer {
 
 				//apagar isto
 				if (userCatalog.exists(clientID)) {
-					if (!userCatalog.getUserByID(clientID).isPasswordCorrect(password)) {
-						outStream.writeObject("erroPass");
-						exitFunc(inStream, outStream, socket);
-					} else {
-						outStream.writeObject("registado");
-					}
+//					if (!userCatalog.getUserByID(clientID).isPasswordCorrect(password)) {
+//						outStream.writeObject("erroPass");
+//						exitFunc(inStream, outStream, socket);
+//					} else {
+//						outStream.writeObject("registado");
+//					}
 				} else {
 					outStream.writeObject("NovoRegisto");
 

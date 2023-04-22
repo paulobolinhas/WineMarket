@@ -3,21 +3,21 @@ package domain;
 public class User {
 
 	private String id;
-	private String password;
+	private String certificado;
 	private int balance;
 
-	public User(String id, String password) {
+	public User(String id, String certificado) {
 		this.id = id;
-		this.password = password;
+		this.certificado = certificado;
 		this.setBalance(200);
 	}
-
+	
 	public String getID() {
 		return this.id;
 	}
 
-	private String showPassword() {
-		return this.password;
+	public String getCertificado() {
+		return this.certificado;
 	}
 
 	public int getBalance() {
@@ -29,10 +29,7 @@ public class User {
 	}
 
 	protected void setNewPass(String newPass) {
-		this.password = newPass;
+		this.certificado = newPass;
 	}
 
-	public boolean isPasswordCorrect(String password) {
-		return this.showPassword().equals(password);
-	}
 }

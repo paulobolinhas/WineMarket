@@ -1,6 +1,7 @@
-package Entities;
+package entities;
 
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -13,13 +14,13 @@ import java.security.Signature;
 import java.security.SignatureException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 
 public class AuthenticationValidator {
 
 	private ObjectInputStream inStream;
 	private ObjectOutputStream outStream;
 	
-	private FileInputStream trustStoreFile;
 	private KeyStore trustStore;
 	private PublicKey clientPublicKey;
 	
@@ -31,7 +32,7 @@ public class AuthenticationValidator {
 	public void sendNonce() throws IOException {
 		Nonce generatedNonce = Nonce.getInstance();
 		this.outStream.writeObject((Long) generatedNonce.getNonce());
-		System.out.println("Enviado Nonce");
+		System.out.println("Servidor->Cliente");
 	}
 	
 	public Long receiveNonce() throws ClassNotFoundException, IOException {
@@ -42,22 +43,17 @@ public class AuthenticationValidator {
 		return (byte[]) inStream.readObject();
 	}
 	
-	public void loadTrustStore() throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
-		this.trustStoreFile = new FileInputStream("src//keys//truststore");
-		this.trustStore = KeyStore.getInstance("JKS");
-		trustStore.load(trustStoreFile, "truststore".toCharArray());
-	}
-	
-	public Certificate getCertificate(String clientID) throws KeyStoreException {
-		return this.trustStore.getCertificate("client"+clientID+"Keys");
+	public Certificate getCertificate(String certificateName) throws KeyStoreException, FileNotFoundException, CertificateException {
+		FileInputStream is = new FileInputStream("src//keys//"+certificateName);
+		CertificateFactory cf = CertificateFactory.getInstance("X.509");
+		return cf.generateCertificate(is);
 	}
 	
 	public PublicKey getPublicKey(Certificate certificate) {
 		return this.clientPublicKey = certificate.getPublicKey();
 	}
 	
-	public void loadCertificateAndPublicKey(String clientID) throws KeyStoreException {
-		Certificate c = this.trustStore.getCertificate("client"+clientID+"Keys");
+	public void loadPublicKey(Certificate c) throws KeyStoreException {
 		this.clientPublicKey = c.getPublicKey();
 	}
 	
@@ -68,8 +64,7 @@ public class AuthenticationValidator {
 	public boolean verifySignature(Long nonceFromClient, byte[] signature) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
 		Signature s = this.getSignature();
 		s.initVerify(this.clientPublicKey);
-		s.update(nonceFromClient.toString().getBytes()); // isto deve estar mal
-
+		s.update(nonceFromClient.toString().getBytes());
 		return s.verify(signature);
 	}
 }
