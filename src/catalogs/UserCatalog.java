@@ -20,26 +20,68 @@ import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import domain.User;
+import entities.FileEncryptorDecryptor;
 
 public class UserCatalog {
 
 	private String usersStr;
 	private String userWalletsStr;
+	private String passwordUsers;
 	
 	private static UserCatalog INSTANCE;
 	private ArrayList<User> userCatalog;
 
-	private UserCatalog(String usersStr, String userWalletsStr) {
+	private UserCatalog(String usersStr, String userWalletsStr, String passwordCifra) {
 		userCatalog = new ArrayList<User>();
 		this.usersStr = usersStr;
 		this.userWalletsStr = userWalletsStr;
+		this.passwordUsers = passwordCifra;
 	}
 
-	public static UserCatalog getInstance(String usersStr, String userWalletsStr) {
+	public static UserCatalog getInstance(String usersStr, String userWalletsStr, String passwordCifra) {
 		if (INSTANCE == null)
-			INSTANCE = new UserCatalog(usersStr, userWalletsStr);
+			INSTANCE = new UserCatalog(usersStr, userWalletsStr, passwordCifra);
 		
 		return INSTANCE;
+	}
+	
+	public void initializeUserCatalog() {
+		
+		FileEncryptorDecryptor.decryptUsersCat(this.usersStr, passwordUsers);
+		
+		File usersFile = new File(this.usersStr);
+		
+		Scanner fileSc = null;
+		try {
+			fileSc = new Scanner(usersFile);
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+		}
+
+		while (fileSc.hasNextLine()) {
+			String[] currentLine = fileSc.nextLine().split(":");
+			this.add(new User(currentLine[0], currentLine[1]));
+		}
+
+		fileSc.close();
+		
+		FileEncryptorDecryptor.encryptUsersCat(this.usersStr, passwordUsers);
+		
+		File userWallets = new File(this.userWalletsStr);
+
+		Scanner walletSc = null;
+		try {
+			walletSc = new Scanner(userWallets);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+
+		while (walletSc.hasNextLine()) {
+			String[] currentLine = walletSc.nextLine().split(":");
+			this.getUserByID(currentLine[0]).setBalance(Integer.parseInt(currentLine[1]));
+		}
+
+		walletSc.close();
 	}
 
 	public synchronized User getUserByID(String id) {
@@ -103,81 +145,5 @@ public class UserCatalog {
 			wallet.close();
 		}
 	}
-	
-	public static void decryptUsers(String inputFile, String outputFile, String password)
-	        throws GeneralSecurityException, IOException {
-
-	    FileInputStream fis = new FileInputStream(inputFile);
-	    FileOutputStream fos = new FileOutputStream(outputFile);
-
-	    byte[] salt = new byte[8];
-	    fis.read(salt);
-
-	    SecretKeyFactory keyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256"); 
-	    Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-
-	    KeySpec keySpec = new PBEKeySpec(password.toCharArray(), salt, 65536, 128);
-	    SecretKey key = new SecretKeySpec(keyFactory.generateSecret(keySpec).getEncoded(), "AES");
-
-	    byte[] iv = new byte[16];
-	    fis.read(iv);
-
-	    AlgorithmParameters params = AlgorithmParameters.getInstance("AES");
-	    params.init(new IvParameterSpec(iv));
-	    cipher.init(Cipher.DECRYPT_MODE, key, params);
-
-	    // Decifra o usersCatalog
-	    byte[] in = new byte[64]; 
-	    int read;
-	    while ((read = fis.read(in)) != -1) {
-	        byte[] output = cipher.update(in, 0, read);
-	        if (output != null) {
-	            fos.write(output);
-	        }
-	    }
-	    byte[] output = cipher.doFinal();
-	    if (output != null) {
-	        fos.write(output);
-	    }
-
-	    fis.close();
-	    fos.flush();
-	    fos.close();
-	}
-	
-	public void initializeUserCatalog() {
-		File usersFile = new File(this.usersStr);
-		
-		Scanner fileSc = null;
-		try {
-			fileSc = new Scanner(usersFile);
-		} catch (FileNotFoundException e1) {
-			e1.printStackTrace();
-		}
-
-		while (fileSc.hasNextLine()) {
-			String[] currentLine = fileSc.nextLine().split(":");
-			this.add(new User(currentLine[0], currentLine[1]));
-		}
-
-		fileSc.close();
-		
-		File userWallets = new File(this.userWalletsStr);
-
-		Scanner walletSc = null;
-		try {
-			walletSc = new Scanner(userWallets);
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
-
-		while (walletSc.hasNextLine()) {
-			String[] currentLine = walletSc.nextLine().split(":");
-			this.getUserByID(currentLine[0]).setBalance(Integer.parseInt(currentLine[1]));
-		}
-
-		walletSc.close();
-	}
-
 
 }

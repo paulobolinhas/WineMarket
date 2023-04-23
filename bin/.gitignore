@@ -1,9 +1,13 @@
-/certificates/
-/domain/
+<<<<<<< HEAD
+/imgClient/
+/imgServer/
+=======
 /entities/
-/decrypted.txt
-/encrypted.txt
+/domain/
+/userCatalogEncrypted.txt
+/usersCatalog.txt
 /catalogs/
+<<<<<<< HEAD
 /blockchain/
 /imgServer/
 /src/
@@ -11,3 +15,6 @@
 /enums/
 /imgClient/
 /usersCatalog.txt
+=======
+>>>>>>> 22c50ccabfddea9566d9b270675b281ed8b3c53d
+>>>>>>> main

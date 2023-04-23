@@ -1,2 +1,0 @@
-truststore:clientKeystore
-1:client1KeyRSApub.cer
