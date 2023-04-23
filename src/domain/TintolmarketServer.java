@@ -29,6 +29,7 @@ import catalogs.UserCatalog;
 import catalogs.WineCatalog;
 import entities.AuthenticationValidator;
 import entities.FileEncryptorDecryptor;
+import entities.IntegrationChecker;
 
 public class TintolmarketServer {
 
@@ -65,6 +66,8 @@ public class TintolmarketServer {
 		wineCatalog = WineCatalog.getWineCatalog();
 		messageCatalog = MessageCatalog.getMessageCatalog();
 
+		// ------------------------------------
+		// CIFRA
 		File usersCatFile = new File(USERSCATFILE);
 		File usersCatFileEncrypted = new File(USERSCATFILENCRYPTED);
 
@@ -76,6 +79,25 @@ public class TintolmarketServer {
 			FileEncryptorDecryptor.encryptUsersCat(USERSCATFILE, passwordCifra);
 
 		}
+
+		// ------------------------------------
+		// INTEGRIDADE
+		
+		File integridadeVerificadaWine = new File(WINECATFILE);
+		File integridadeVerificadaSell = new File(SELLSCATFILE);
+		File integridadeVerificadaMsg = new File(MSGCATFILE);
+		File integridadeVerificadaWallet = new File(WALLETFILE);
+
+		if (IntegrationChecker.checkSumIntegrityVerification(integridadeVerificadaWine, WINECATFILE) && 
+				IntegrationChecker.checkSumIntegrityVerification(integridadeVerificadaSell, SELLSCATFILE) && 
+				IntegrationChecker.checkSumIntegrityVerification(integridadeVerificadaMsg, MSGCATFILE) && 
+				IntegrationChecker.checkSumIntegrityVerification(integridadeVerificadaWallet, WALLETFILE)) {
+			System.out.println("Os ficheiros estão íntegros.");
+		} else {
+			System.exit(0);
+		}
+
+		// ------------------------------------
 
 		System.setProperty("javax.net.ssl.keyStore", "src//keys//" + serverKeystore);
 		System.setProperty("javax.net.ssl.keyStorePassword", passwordServerKeystore);
