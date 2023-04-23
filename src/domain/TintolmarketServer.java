@@ -30,6 +30,7 @@ import catalogs.WineCatalog;
 import entities.AuthenticationValidator;
 import entities.BlockChain;
 import entities.FileEncryptorDecryptor;
+import entities.Transaction;
 import enums.TransactionType;
 
 public class TintolmarketServer {
@@ -112,7 +113,9 @@ public class TintolmarketServer {
 		initializeSellsCatalog();
 		initializeWineCatalog();
 		initializeMessagesStore();
-		
+
+
+		blockchain.initializeBlockChain();
 		//aqui nao basta apenas isto. tem de ser criado o metodo que carrega a blockchain para a memoria
 		//este metodo so pode ficar aqui se nao existir blockchain ainda
 		try {
@@ -348,18 +351,18 @@ public class TintolmarketServer {
 
 		private String addFunc(String wineID, String image) throws IOException {
 
-//			ReceiveImagesHandler rcvImgHandler = new ReceiveImagesHandler(inStream, "./src/imgServer/");
-//
-//			if (wineCatalog.exists(wineID)) {
-//				rcvImgHandler.consumeInput(); // assumindo que a imagem existe
-//				return "This wine already exists.";
-//			}
-//
-//			try {
-//				rcvImgHandler.receiveImage(image);
-//			} catch (IOException e) {
-//				e.printStackTrace();
-//			}
+			//			ReceiveImagesHandler rcvImgHandler = new ReceiveImagesHandler(inStream, "./src/imgServer/");
+			//
+			//			if (wineCatalog.exists(wineID)) {
+			//				rcvImgHandler.consumeInput(); // assumindo que a imagem existe
+			//				return "This wine already exists.";
+			//			}
+			//
+			//			try {
+			//				rcvImgHandler.receiveImage(image);
+			//			} catch (IOException e) {
+			//				e.printStackTrace();
+			//			}
 
 			String wineRegist = "";
 			if (wineCatalog.getSize() == 0)
@@ -401,6 +404,31 @@ public class TintolmarketServer {
 				}
 			}
 
+			try {
+				
+				Transaction currentTransaction = blockchain.createTransaction(TransactionType.SELL, wineID, quantity, value, seller);
+				System.out.println("Enviar confirmacao de VENDA ao cliente para obter a assinatura");
+				outStream.writeObject("Deseja confirmar a venda?");
+
+				String confirmation = null;
+
+				confirmation = (String) inStream.readObject(); //Receber confirmacao
+
+				if (confirmation.equals("sim"))
+					outStream.writeObject(currentTransaction.getDataToSign());
+				//adicionar o que acontece se nao
+
+				inStream.readObject(); //data que n deve ser necessária
+				byte[] signedContent = (byte[]) inStream.readObject();
+				
+				currentTransaction.setSignature(signedContent);
+				
+				blockchain.addTransaction(currentTransaction);
+				
+			} catch (ClassNotFoundException | IOException e) {
+				e.printStackTrace();
+			} 
+			
 			String wineRegist = "";
 
 			if (sellsCatalog.getSize() == 0)
@@ -415,7 +443,7 @@ public class TintolmarketServer {
 			}
 
 			sellsCatalog.add(new Sell(wineID, wine.getImage(), value, quantity, seller));
-			blockchain.createTransaction(TransactionType.SELL, wineID, quantity, value, seller);
+
 
 			return "Wine is now on sale.";
 		}
@@ -814,19 +842,19 @@ public class TintolmarketServer {
 						String newContentWithoutNewLine = "";
 
 						switch (ID) {
-							case "client":
-								String newStringCWallet = (walletFileLineSplitted[0] + ":" + String.valueOf(balance));
-								String newContentCWallet = oldContent.replace(walletFileLine, newStringCWallet);
-								newContentWithoutNewLine = newContentCWallet.substring(0, newContentCWallet.length() - 2);
-								userCatalog.getUserByID(walletFileLineSplitted[0]).setBalance(balance);
-								break;
-	
-							case "seller":
-								String newStringSWallet = (walletFileLineSplitted[0] + ":" + String.valueOf(balance));
-								String newContentSWallet = oldContent.replace(walletFileLine, newStringSWallet);
-								newContentWithoutNewLine = newContentSWallet.substring(0, newContentSWallet.length() - 2);
-								userCatalog.getUserByID(walletFileLineSplitted[0]).setBalance(balance);
-								break;
+						case "client":
+							String newStringCWallet = (walletFileLineSplitted[0] + ":" + String.valueOf(balance));
+							String newContentCWallet = oldContent.replace(walletFileLine, newStringCWallet);
+							newContentWithoutNewLine = newContentCWallet.substring(0, newContentCWallet.length() - 2);
+							userCatalog.getUserByID(walletFileLineSplitted[0]).setBalance(balance);
+							break;
+
+						case "seller":
+							String newStringSWallet = (walletFileLineSplitted[0] + ":" + String.valueOf(balance));
+							String newContentSWallet = oldContent.replace(walletFileLine, newStringSWallet);
+							newContentWithoutNewLine = newContentSWallet.substring(0, newContentSWallet.length() - 2);
+							userCatalog.getUserByID(walletFileLineSplitted[0]).setBalance(balance);
+							break;
 						}
 
 						writer = new FileWriter(fileToBeModified);

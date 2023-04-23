@@ -69,7 +69,10 @@ public class BlockChain {
 	}
 	
 	public synchronized Transaction createTransaction(TransactionType type, String wineID, int unitsNum, int unitPrice, String transactionOwner) throws IOException {
-		
+	 return this.currentBlock.createTransaction(currentTransactionID, type, wineID, unitsNum, unitPrice, transactionOwner);
+	}
+	
+	public synchronized void addTransaction(Transaction t) throws IOException {
 		if (this.currentBlock.getN_trx() == 5) {
 			//adicionar metodo para assinar o bloco.
 			//retornar hash com assinatura
@@ -83,19 +86,31 @@ public class BlockChain {
 			} 
 		}	
 		
-		Transaction t = this.currentBlock.createTransaction(currentTransactionID, type, wineID, unitsNum, unitPrice, transactionOwner);
-		
 		FileWriter blockFile = new FileWriter(this.getCurrentPath(), true);
 
 		blockFile.write(t.toString());
 		blockFile.close();
 		
-		return t;
-		
 	}
 	
 	private String getCurrentPath() {
 		return this.prefixPath + this.currentBlock.getId() + this.sufixPath;
+	}
+
+	
+	/*
+	 * percorrer os ficheiros usando os numeros, até nao encontrar mais ficheiros
+	 * 
+	 * em cada ficheiro extrair a informacao e as transacoes e o bloco.
+	 * 
+	 * depois da blockchain ter sido carregada para a memoria, verificar as assinaturas com o hash do bloco
+	 * seguinte. se nao bater certo, fechar o servidor
+	 * 
+	 * */
+	public void initializeBlockChain() {
+	
+		
+		
 	}
 
 	

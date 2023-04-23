@@ -36,12 +36,21 @@ public class ClientAuthentication {
 		return (PrivateKey)this.clientKeyStore.getKey(keyStoreAlias, passKeyStoreString.toCharArray());
 	}
 	
-	public void SendSignature(Long nonceFromServer, PrivateKey privateKey) throws InvalidKeyException, SignatureException, IOException, NoSuchAlgorithmException {
+	public void SendSignature(Long dataToSign, PrivateKey privateKey) throws InvalidKeyException, SignatureException, IOException, NoSuchAlgorithmException {
 		Signature signature = Signature.getInstance("SHA256withRSA");;
 		signature.initSign(privateKey);
-		signature.update(nonceFromServer.toString().getBytes());
+		signature.update(dataToSign.toString().getBytes());
 
-		this.outStream.writeObject(nonceFromServer);
+		this.outStream.writeObject(dataToSign);
+		this.outStream.writeObject(signature.sign());
+	}
+	
+	public void SendSignature(String dataToSign, PrivateKey privateKey) throws InvalidKeyException, SignatureException, IOException, NoSuchAlgorithmException {
+		Signature signature = Signature.getInstance("SHA256withRSA");;
+		signature.initSign(privateKey);
+		signature.update(dataToSign.toString().getBytes());
+
+		this.outStream.writeObject(dataToSign);
 		this.outStream.writeObject(signature.sign());
 	}
 	

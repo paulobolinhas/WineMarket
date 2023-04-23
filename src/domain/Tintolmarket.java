@@ -136,7 +136,15 @@ public class Tintolmarket {
 //							e.printStackTrace();
 //						}
 //					}
-
+					
+					
+					System.out.println(inStream.readObject()); //mensagem de confirmacao
+					outStream.writeObject(clientInterface.nextLine()); //sim ou nao
+					
+					String dataToSign = (String) inStream.readObject();
+					
+					clientAuth.SendSignature(dataToSign, privateKey); //envia data e data assinado
+					
 					String result = (String) inStream.readObject();
 					System.out.println(result);
 
@@ -160,7 +168,7 @@ public class Tintolmarket {
 				sslSocket.close();
 				System.exit(0);
 
-			} catch (ClassNotFoundException e) {
+			} catch (ClassNotFoundException | InvalidKeyException | SignatureException | NoSuchAlgorithmException e) {
 				e.printStackTrace();
 			}
 
