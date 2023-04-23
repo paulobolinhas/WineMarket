@@ -28,11 +28,12 @@ import catalogs.SellsCatalog;
 import catalogs.UserCatalog;
 import catalogs.WineCatalog;
 import entities.AuthenticationValidator;
-import entities.FileEncryptor;
+import entities.FileEncryptorDecryptor;
 
 public class TintolmarketServer {
 
 	public static final String USERSCATFILE = "./src/usersCatalog.txt";
+	public static final String USERSCATFILENCRYPTED = "./src/userCatalogEncrypted.txt";
 	public static final String WINECATFILE = "./src/wineCatalog.txt";
 	public static final String SELLSCATFILE = "./src/sellsCatalog.txt";
 	public static final String MSGCATFILE = "./src/messageCatalog.txt";
@@ -47,11 +48,6 @@ public class TintolmarketServer {
 
 		System.out.println("servidor: main");
 
-		userCatalog = UserCatalog.getInstance(USERSCATFILE, WALLETFILE);
-		sellsCatalog = SellsCatalog.getSellsCatalog();
-		wineCatalog = WineCatalog.getWineCatalog();
-		messageCatalog = MessageCatalog.getMessageCatalog();
-
 		TintolmarketServer tintolServer = new TintolmarketServer();
 
 		// TintolmarketServer <port> <password-cifra> <keystore> <password-keystore>
@@ -63,23 +59,23 @@ public class TintolmarketServer {
 		if (args.length == 4) {
 			port = Integer.parseInt(args[0]);
 		}
-		
-	    try {
-	    	
-	        // Cifrar
-	    	FileEncryptor.encryptUsers(USERSCATFILE, "./src/userCatalogEncrypted.txt", passwordCifra);
-	        System.out.println("Ficheiro cifrado com sucesso.");
-	        File usersCatalog = new File(USERSCATFILE);
-	        usersCatalog.delete();
 
-	        // Decifrar e Cifrar (chamar sempre que se acede ao ficheiro)
-	        FileEncryptor.decryptEncryptUsers(USERSCATFILE, passwordCifra);
-	        System.out.println("Decrypt Encrypt com sucesso.");
-	        
-	    } catch (Exception ex) {
-	        System.out.println("Ocorreu um erro: " + ex.getMessage());
-	        ex.printStackTrace();
-	    }
+		userCatalog = UserCatalog.getInstance(USERSCATFILE, WALLETFILE, passwordCifra);
+		sellsCatalog = SellsCatalog.getSellsCatalog();
+		wineCatalog = WineCatalog.getWineCatalog();
+		messageCatalog = MessageCatalog.getMessageCatalog();
+
+		File usersCatFile = new File(USERSCATFILE);
+		File usersCatFileEncrypted = new File(USERSCATFILENCRYPTED);
+
+		if (usersCatFile.exists()) {
+			FileEncryptorDecryptor.encryptUsersCat(USERSCATFILE, passwordCifra);
+
+		} else if (usersCatFileEncrypted.exists()) {
+			FileEncryptorDecryptor.decryptUsersCat(USERSCATFILE, passwordCifra);
+			FileEncryptorDecryptor.encryptUsersCat(USERSCATFILE, passwordCifra);
+
+		}
 
 		System.setProperty("javax.net.ssl.keyStore", "src//keys//" + serverKeystore);
 		System.setProperty("javax.net.ssl.keyStorePassword", passwordServerKeystore);
@@ -216,38 +212,38 @@ public class TintolmarketServer {
 				authValidator.sendNonce();
 
 				try {
-					
+
 					Long nonceFromClient = authValidator.receiveNonce();
 					System.out.println("Nonce recebido do cliente: " + nonceFromClient);
-					
+
 					byte[] signature = authValidator.receiveSignature();
 					System.out.println("Assinatura do cliente recebida");
-					
+
 					Certificate certificate = null;
-					
+
 					if (clientExistsFlag) {
 						String certificateStr = userCatalog.getCertificadoByID(clientID);
 						certificate = authValidator.getCertificate(certificateStr);
 					} else {
 						certificate = authValidator.getCertificate();
 					}
-	
+
 					authValidator.loadPublicKey(certificate);
-					
+
 					boolean isClientValid = authValidator.verifySignature(nonceFromClient, signature);
 					outStream.writeObject(isClientValid);
-					
+
 					if (!isClientValid) {
 						System.out.println("Cliente Corrompido! A fechar o servidor");
 						exitFunc(inStream, outStream, socket);
 					}
-		
+
 					if (!clientExistsFlag) {
 
 						userCatalog.registNewUser(clientID, certificadoStr);
 						userCatalog.registNewWallet(clientID);
 						userCatalog.add(new User(clientID, certificadoStr));
-						
+
 						outStream.writeObject("Novo cliente " + clientID + " registado");
 					}
 

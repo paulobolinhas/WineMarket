@@ -1,9 +1,5 @@
-/certificates/
-/domain/
 /entities/
-/decrypted.txt
-/encrypted.txt
-/catalogs/
-/usersCatalog.txt
-/encrypted.txt.txt
+/domain/
 /userCatalogEncrypted.txt
+/usersCatalog.txt
+/catalogs/
