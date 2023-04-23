@@ -20,13 +20,10 @@ public class Block {
 		this.transactions = new ArrayList<>();
 	}
 	
-	public Transaction createTransaction(TransactionType type, int wineID, int unitsNum, int unitPrice, int transactionOwner) {
-		
-		if (this.transactions.size() == 5)
-			return null;
-		
-		Transaction res = new Transaction(type, wineID, unitsNum, unitPrice, transactionOwner);
+	public Transaction createTransaction(long transactionID, TransactionType type, String wineID, int unitsNum, int unitPrice, String transactionOwner) {
+		Transaction res = new Transaction(transactionID, type, wineID, unitsNum, unitPrice, transactionOwner);
 		this.transactions.add(res);
+		this.n_trx++;
 		return res;
 	}
 
@@ -34,16 +31,20 @@ public class Block {
 		return this.block_id;
 	}
 	
+	public long getN_trx() {
+		return this.n_trx;
+	}
+	
 	public String getHeaderString() {
-		return "Hash: " + this.previousHash +
-				"\n block_id: " + this.block_id +
-				"\n n_trx: " + this.n_trx;
+		return "hash: " + this.previousHash +
+				"\nblock_id: " + this.block_id +
+				"\nn_trx: " + this.n_trx;
 	}
 	
 	public String getFstHeader() {
-		return "Hash: 00000000" +
-				"\n block_id: " + this.block_id +
-				"\n n_trx: " + this.n_trx;
+		return "hash: 00000000" +
+				"\nblock_id: " + this.block_id +
+				"\nn_trx: " + this.n_trx;
 	}
 
 }

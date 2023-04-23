@@ -5,13 +5,15 @@ import enums.TransactionType;
 public class Transaction {
 	
 	private TransactionType type;
-	private int wineID;
+	private long transactionID;
+	private String wineID;
 	private int unitsNum;
 	private int unitPrice;
-	private int transactionOwner; //se é um venda é o id do vendedor. se é uma compra é o id do comprador
+	private String transactionOwner; //se é um venda é o id do vendedor. se é uma compra é o id do comprador
 	//adicionar assinatura. se for venda o vendedor assina, se for compra, o comprador assina
 	
-	public Transaction(TransactionType type, int wineID, int unitsNum, int unitPrice, int transactionOwner) {
+	public Transaction(long transactionID, TransactionType type, String wineID, int unitsNum, int unitPrice, String transactionOwner) {
+		this.transactionID = transactionID;
 		this.type = type;
 		this.wineID = wineID;
 		this.unitsNum = unitsNum;
@@ -20,23 +22,28 @@ public class Transaction {
 	}
 
 	public int getUnitsNum() {
-		return unitsNum;
+		return this.unitsNum;
 	}
 
 	public int getUnitPrice() {
-		return unitPrice;
+		return this.unitPrice;
 	}
 
-	public int getWineID() {
-		return wineID;
+	public String getWineID() {
+		return this.wineID;
 	}
 
-	public int getTransactionOwner() {
-		return transactionOwner;
+	public String getTransactionOwner() {
+		return this.transactionOwner;
 	}
 	
 	public String toString() {
-		return "Type";
+		return "\ntransaction_id: " + this.transactionID +
+				"\ntype: " + this.type.toString() +
+				"\nwine: " + this.wineID +
+				"\nnumber of units: " + this.unitsNum +
+				"\nprice per unit: " + this.unitPrice +
+				"\nowner: " + this.transactionOwner;
 	}
 	
 }

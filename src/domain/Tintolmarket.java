@@ -126,16 +126,16 @@ public class Tintolmarket {
 
 					String[] userActionSplited = userAction.split(" ");
 
-					if (userActionSplited[0].equals("add") || userActionSplited[0].equals("a")) {
-
-						SendImagesHandler sendImgHandler = new SendImagesHandler(outStream, "./src/imgClient/");
-
-						try {
-							sendImgHandler.sendImage(userActionSplited[2]);
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
-					}
+//					if (userActionSplited[0].equals("add") || userActionSplited[0].equals("a")) {
+//
+//						SendImagesHandler sendImgHandler = new SendImagesHandler(outStream, "./src/imgClient/");
+//
+//						try {
+//							sendImgHandler.sendImage(userActionSplited[2]);
+//						} catch (IOException e) {
+//							e.printStackTrace();
+//						}
+//					}
 
 					String result = (String) inStream.readObject();
 					System.out.println(result);
