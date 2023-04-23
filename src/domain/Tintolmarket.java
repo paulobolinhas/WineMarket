@@ -113,15 +113,6 @@ public class Tintolmarket {
 
 			try {
 
-				String loginCheck = (String) inStream.readObject();
-
-				if (loginCheck.equals("erroPass")) {
-					System.out.println("Password invalida. Programa Terminado.");
-					System.exit(0);
-				} else if (loginCheck.equals("NovoRegisto")) {
-					System.out.println("Novo cliente registado.");
-				}
-
 				String userAction = "";
 
 				while (!userAction.equals("exit")) {

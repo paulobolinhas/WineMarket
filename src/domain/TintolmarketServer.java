@@ -66,13 +66,13 @@ public class TintolmarketServer {
 		
 	    try {
 	        // Cifrar
-	    	FileEncryptor.encryptUsers(USERSCATFILE, "./src/encrypted.txt", passwordCifra);
-	        System.out.println("Ficheiro cifrado com sucesso.");
-
-	        // Decifrar (dps colocar no sitio onde e suposto)
-	        UserCatalog.decryptUsers("./src/encrypted.txt", "./src/decrypted.txt", passwordCifra);
-	        System.out.println("Ficheiro decifrado com sucesso.");
-	        
+//	    	FileEncryptor.encryptUsers(USERSCATFILE, "./src/encrypted.txt", passwordCifra);
+//	        System.out.println("Ficheiro cifrado com sucesso.");
+//
+//	        // Decifrar (dps colocar no sitio onde e suposto)
+//	        UserCatalog.decryptUsers("./src/encrypted.txt", USERSCATFILE, passwordCifra);
+//	        System.out.println("Ficheiro decifrado com sucesso.");
+//	        
 	    } catch (Exception ex) {
 	        System.out.println("Ocorreu um erro: " + ex.getMessage());
 	        ex.printStackTrace();
@@ -105,7 +105,7 @@ public class TintolmarketServer {
 
 	protected void initializeMemory() {
 
-		initializeUserCatalog();
+		userCatalog.initializeUserCatalog();
 		initializeSellsCatalog();
 		initializeWineCatalog();
 		initializeMessagesStore();
@@ -129,43 +129,6 @@ public class TintolmarketServer {
 		}
 
 		fileSc.close();
-	}
-
-	private synchronized void initializeUserCatalog() {
-		
-		userCatalog.initializeUserCatalog();
-//		File usersFile = new File(USERSCATFILE);
-//
-//		Scanner fileSc = null;
-//		try {
-//			fileSc = new Scanner(usersFile);
-//		} catch (FileNotFoundException e1) {
-//			e1.printStackTrace();
-//		}
-//
-//		while (fileSc.hasNextLine()) {
-//			String[] currentLine = fileSc.nextLine().split(":");
-//			userCatalog.add(new User(currentLine[0], currentLine[1]));
-//		}
-//
-//		fileSc.close();
-//
-//		File userWallets = new File(WALLETFILE);
-//
-//		Scanner walletSc = null;
-//		try {
-//			walletSc = new Scanner(userWallets);
-//		} catch (FileNotFoundException e) {
-//			e.printStackTrace();
-//		}
-//
-//		while (walletSc.hasNextLine()) {
-//			String[] currentLine = walletSc.nextLine().split(":");
-//			userCatalog.getUserByID(currentLine[0]).setBalance(Integer.parseInt(currentLine[1]));
-//		}
-//
-//		walletSc.close();
-
 	}
 
 	private synchronized void initializeSellsCatalog() {
@@ -289,9 +252,6 @@ public class TintolmarketServer {
 					System.out.println("ERRO - Um problema ocorreu com a validacao da autenticacao.");
 					e.printStackTrace();
 				}
-
-
-
 
 				interactWUser(clientID);
 
