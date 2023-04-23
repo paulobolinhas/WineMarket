@@ -39,5 +39,11 @@ public class Block {
 				"\n block_id: " + this.block_id +
 				"\n n_trx: " + this.n_trx;
 	}
+	
+	public String getFstHeader() {
+		return "Hash: 00000000" +
+				"\n block_id: " + this.block_id +
+				"\n n_trx: " + this.n_trx;
+	}
 
 }

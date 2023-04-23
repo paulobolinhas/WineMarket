@@ -3,17 +3,19 @@ package entities;
 import java.util.List;
 import java.util.ArrayList;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 
 public class BlockChain {
 
 	private List<Block> blockchain;
-	private String prefix = "src/blockchain/block_";
+	private final String prefix = "src/blockchain/block_";
 	private long currentID;
 	private static BlockChain INSTANCE;
 	
 	private BlockChain() {
 		this.blockchain = new ArrayList<>();
+		this.currentID = 0;
 	}
 	
 	public static BlockChain getInstance() {
@@ -28,18 +30,23 @@ public class BlockChain {
 		this.blockchain.add(newBlock);
 		
 		String path = "src/blockchain/block_"+newBlock.getId()+".blk";
+		
+		String content = "";
+		
+		if (this.currentID == 0)
+			content = newBlock.getFstHeader();
+		else
+			newBlock.getHeaderString();
+		
 		File newBlkFile = new File(path);
+		FileWriter fw = new FileWriter(newBlkFile);
 		boolean sucess = newBlkFile.createNewFile();
 		if (sucess) 
 			System.out.println("Ficheiro "+path+" criado com sucesso");
 		else
 			System.out.println("Erro ao criar ficheiro "+path);
 		
-		String content = newBlock.getHeaderString();
-		
-		
-		
-		
+		fw.write(content);
 		
 		return newBlock;
 	}

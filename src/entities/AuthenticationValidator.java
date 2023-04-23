@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.security.InvalidKeyException;
-import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
@@ -14,6 +13,8 @@ import java.security.SignatureException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
+
+import domain.Nonce;
 
 public class AuthenticationValidator {
 
@@ -42,13 +43,6 @@ public class AuthenticationValidator {
 	
 	public Certificate getCertificate() throws KeyStoreException, CertificateException, IOException, ClassNotFoundException {
 		return (Certificate) this.inStream.readObject();
-		//		String path = "src/certificates/"+certificateName;
-//		System.out.println(path);
-//		FileInputStream is = new FileInputStream(path);
-//		CertificateFactory cf = CertificateFactory.getInstance("X.509");
-//		Certificate c = cf.generateCertificate(is);
-//		is.close();
-//		return c;
 	}
 	
 	public Certificate getCertificate(String certificateName) throws KeyStoreException, CertificateException, IOException, ClassNotFoundException {
