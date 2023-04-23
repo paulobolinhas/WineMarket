@@ -1,0 +1,9 @@
+
+--------
+TRANSACTION: 3
+type: Buy
+wine: vinho
+number of units: 2
+price per unit: 2
+owner: 2
+signature: [B@32773885

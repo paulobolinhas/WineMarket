@@ -1,0 +1,19 @@
+hash: 00000000
+block_id: 1
+n_trx: 0
+--------
+TRANSACTION: 1
+type: Sell
+wine: vinho
+number of units: 100
+price per unit: 2
+owner: 1
+signature: [B@50789581
+--------
+TRANSACTION: 2
+type: Buy
+wine: vinho
+number of units: 2
+price per unit: 2
+owner: 2
+signature: [B@5258c7ca

@@ -22,28 +22,28 @@ public class BlockChain {
 	private long currentTransactionID;
 	private static BlockChain INSTANCE;
 	//adicionar assinatura do servidor
-	
+
 	private BlockChain() {
 		this.blockchain = new LinkedList<>();
-		
+
 		//posteriormente estes numeros serao inicializados com os valores obtidos na verificacao da blockchain
 		this.currentBlockID = 1;
 		this.currentTransactionID = 1;
 	}
-	
+
 	public static BlockChain getInstance() {
 		if (INSTANCE == null)
 			return INSTANCE = new BlockChain();
-		
+
 		return INSTANCE;
 	}
-	
+
 	public synchronized Block createBlock() throws IOException {
 		Block newBlock = new Block(this.currentBlockID);
 		this.currentBlock = newBlock;
-		
+
 		String content = "";
-		
+
 		if (this.currentBlockID == 1) {
 			content = newBlock.getFstHeader();
 		} else
@@ -51,7 +51,7 @@ public class BlockChain {
 
 		this.currentBlockID++;
 		this.blockchain.add(newBlock);
-		
+
 		File newBlkFile = new File(this.getCurrentPath());
 		if (!newBlkFile.exists()) {
 			if (newBlkFile.createNewFile()) 
@@ -59,21 +59,23 @@ public class BlockChain {
 			else
 				System.out.println("Erro ao criar ficheiro "+this.getCurrentPath());
 		}
-		
+
 		FileWriter fw = new FileWriter(newBlkFile);
 		fw.write(content);
 		fw.close();
-		
-		
+
+
 		return newBlock;
 	}
-	
+
 	public synchronized Transaction createTransaction(TransactionType type, String wineID, int unitsNum, int unitPrice, String transactionOwner) throws IOException {
-	 return this.currentBlock.createTransaction(currentTransactionID, type, wineID, unitsNum, unitPrice, transactionOwner);
+		Transaction t = this.currentBlock.createTransaction(currentTransactionID, type, wineID, unitsNum, unitPrice, transactionOwner);
+		this.currentTransactionID++;
+		return t;
 	}
-	
+
 	public synchronized void addTransaction(Transaction t) throws IOException {
-		if (this.currentBlock.getN_trx() == 5) {
+		if (this.currentBlock.getN_trx() == 2) {
 			//adicionar metodo para assinar o bloco.
 			//retornar hash com assinatura
 			try {
@@ -85,19 +87,23 @@ public class BlockChain {
 				e.printStackTrace();
 			} 
 		}	
-		
-		FileWriter blockFile = new FileWriter(this.getCurrentPath(), true);
 
-		blockFile.write(t.toString());
+		//Aqui nao basta escrever, tem q se alterar o numero de transacoes entao tem q se substituir
+		FileWriter blockFile = new FileWriter(this.getCurrentPath(), true);
+		if (this.currentBlock.getN_trx() < 2)
+			blockFile.write("\n--------"+t.toString());
+		else
+			blockFile.write("\n--------"+t.toString()+"\n--------");
 		blockFile.close();
-		
+
+		this.currentBlock.addTransaction(t);
 	}
-	
+
 	private String getCurrentPath() {
 		return this.prefixPath + this.currentBlock.getId() + this.sufixPath;
 	}
 
-	
+
 	/*
 	 * percorrer os ficheiros usando os numeros, até nao encontrar mais ficheiros
 	 * 
@@ -108,11 +114,11 @@ public class BlockChain {
 	 * 
 	 * */
 	public void initializeBlockChain() {
-	
-		
-		
+
+
+
 	}
 
-	
-	
+
+
 }

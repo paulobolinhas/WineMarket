@@ -116,7 +116,7 @@ public class Tintolmarket {
 				String userAction = "";
 
 				while (!userAction.equals("exit")) {
-
+					
 					System.out.println((String) inStream.readObject()); // menu
 					System.out.println("Choose action:\n");
 
@@ -148,18 +148,18 @@ public class Tintolmarket {
 					String result = (String) inStream.readObject();
 					System.out.println(result);
 
-					if ((userActionSplited[0].equals("view") || userActionSplited[0].equals("v"))
-							&& !result.equals("This Wine doesnt exist")) {
-
-						String imgName = (String) inStream.readObject();
-						ReceiveImagesHandler rcvImgHandler = new ReceiveImagesHandler(inStream, "./src/imgClient/");
-
-						try {
-							rcvImgHandler.receiveImage(imgName);
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
-					}
+//					if ((userActionSplited[0].equals("view") || userActionSplited[0].equals("v"))
+//							&& !result.equals("This Wine doesnt exist")) {
+//
+//						String imgName = (String) inStream.readObject();
+//						ReceiveImagesHandler rcvImgHandler = new ReceiveImagesHandler(inStream, "./src/imgClient/");
+//
+//						try {
+//							rcvImgHandler.receiveImage(imgName);
+//						} catch (IOException e) {
+//							e.printStackTrace();
+//						}
+//					}
 				}
 
 				clientInterface.close();

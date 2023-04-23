@@ -284,7 +284,7 @@ public class TintolmarketServer {
 				while (!userAction.equals("exit")) {
 
 					outStream.writeObject(menu);
-
+					
 					try {
 						userAction = (String) inStream.readObject();
 					} catch (ClassNotFoundException e) {
@@ -405,30 +405,30 @@ public class TintolmarketServer {
 			}
 
 			try {
-				
+
 				Transaction currentTransaction = blockchain.createTransaction(TransactionType.SELL, wineID, quantity, value, seller);
 				System.out.println("Enviar confirmacao de VENDA ao cliente para obter a assinatura");
-				outStream.writeObject("Deseja confirmar a venda?");
+				outStream.writeObject("Do you want to confirm the SELL operation? (yes or no)");
 
-				String confirmation = null;
+				String confirmation = (String) inStream.readObject(); //Receber confirmacao
 
-				confirmation = (String) inStream.readObject(); //Receber confirmacao
-
-				if (confirmation.equals("sim"))
+				if (confirmation.equals("yes"))
 					outStream.writeObject(currentTransaction.getDataToSign());
+				else
+					return "Sell Operation canceled";
 				//adicionar o que acontece se nao
 
 				inStream.readObject(); //data que n deve ser necessária
 				byte[] signedContent = (byte[]) inStream.readObject();
-				
+
 				currentTransaction.setSignature(signedContent);
-				
+
 				blockchain.addTransaction(currentTransaction);
-				
+
 			} catch (ClassNotFoundException | IOException e) {
 				e.printStackTrace();
 			} 
-			
+
 			String wineRegist = "";
 
 			if (sellsCatalog.getSize() == 0)
@@ -493,14 +493,14 @@ public class TintolmarketServer {
 			return false;
 		}
 
-		private String buyFunc(String wine, int quantityToBuy, String sellerID, String clientID) throws IOException {
+		private String buyFunc(String wineID, int quantityToBuy, String sellerID, String clientID) throws IOException {
 
 			String errorCase = "\nReasons why you can't buy this wine:\n\n"
 					+ " - This wine does not exists or it isn't available on this seller's stock;\n"
 					+ " - Wine's seller and client are the same;\n"
 					+ " - Quantity not available or insufficient funds.";
 
-			Sell currentSale = sellsCatalog.getSale(wine, sellerID);
+			Sell currentSale = sellsCatalog.getSale(wineID, sellerID);
 			if (currentSale == null || clientID.equals(sellerID) || quantityToBuy <= 0)
 				return errorCase;
 
@@ -509,6 +509,32 @@ public class TintolmarketServer {
 					&& winePrice * quantityToBuy <= walletFunc(clientID);
 			if (!isPurchasable)
 				return errorCase;
+
+			try {
+
+				Transaction currentTransaction = blockchain.createTransaction(TransactionType.BUY, wineID, quantityToBuy, winePrice, clientID);
+				System.out.println("Enviar confirmacao de VENDA ao cliente para obter a assinatura");
+				outStream.writeObject("Do you want to confirm the BUY operation? (yes or no)");
+
+
+				String confirmation = (String) inStream.readObject(); //Receber confirmacao
+
+				if (confirmation.equals("yes"))
+					outStream.writeObject(currentTransaction.getDataToSign());
+				else
+					return "BUY Operation canceled";
+				//adicionar o que acontece se nao
+
+				inStream.readObject(); //data que n deve ser necessária
+				byte[] signedContent = (byte[]) inStream.readObject();
+
+				currentTransaction.setSignature(signedContent);
+
+				blockchain.addTransaction(currentTransaction);
+
+			} catch (ClassNotFoundException | IOException e) {
+				e.printStackTrace();
+			} 
 
 			int clientNewBalance = walletFunc(clientID) - quantityToBuy * winePrice;
 			int sellerNewBalance = walletFunc(sellerID) + quantityToBuy * winePrice;

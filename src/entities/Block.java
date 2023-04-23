@@ -21,10 +21,7 @@ public class Block {
 	}
 	
 	public Transaction createTransaction(long transactionID, TransactionType type, String wineID, int unitsNum, int unitPrice, String transactionOwner) {
-		Transaction res = new Transaction(transactionID, type, wineID, unitsNum, unitPrice, transactionOwner);
-		this.transactions.add(res);
-		this.n_trx++;
-		return res;
+		return new Transaction(transactionID, type, wineID, unitsNum, unitPrice, transactionOwner);
 	}
 
 	public long getId() {
@@ -45,6 +42,11 @@ public class Block {
 		return "hash: 00000000" +
 				"\nblock_id: " + this.block_id +
 				"\nn_trx: " + this.n_trx;
+	}
+
+	public void addTransaction(Transaction t) {
+		this.transactions.add(t);
+		this.n_trx++;
 	}
 
 }

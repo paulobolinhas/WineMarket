@@ -40,7 +40,7 @@ public class Transaction {
 
 	
 	public String getDataToSign() {
-		return "\ntransaction_id: " + this.transactionID +
+		return "\nTRANSACTION: " + this.transactionID +
 				"\ntype: " + this.type.toString() +
 				"\nwine: " + this.wineID +
 				"\nnumber of units: " + this.unitsNum +
@@ -49,7 +49,7 @@ public class Transaction {
 	}
 	
 	public String toString() {
-		return "\ntransaction_id: " + this.transactionID +
+		return "\nTRANSACTION: " + this.transactionID +
 				"\ntype: " + this.type.toString() +
 				"\nwine: " + this.wineID +
 				"\nnumber of units: " + this.unitsNum +
