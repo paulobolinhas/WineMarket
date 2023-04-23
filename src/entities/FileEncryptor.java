@@ -2,6 +2,9 @@ package entities;
 
 import javax.crypto.*;
 import javax.crypto.spec.*;
+
+import catalogs.UserCatalog;
+
 import java.io.*;
 import java.security.*;
 import java.security.spec.AlgorithmParameterSpec;
@@ -59,8 +62,6 @@ public class FileEncryptor {
 	    outFile.flush();
 	    outFile.close();
 	}
-
-
 	
 	private static byte[] generateSalt() {
 	    SecureRandom random = new SecureRandom();
@@ -68,4 +69,26 @@ public class FileEncryptor {
 	    random.nextBytes(salt);
 	    return salt;
 	}
+	
+	public static void decryptEncryptUsers(String inputFile, String pass) {
+		
+		try {
+	        // Decifrar 
+	        UserCatalog.decryptUsers("./src/userCatalogEncrypted.txt", inputFile, pass);
+	        System.out.println("Ficheiro decifrado com sucesso.");
+	        File usersCatalog = new File("./src/userCatalogEncrypted.txt");
+	        usersCatalog.delete();
+	        
+	        // Cifrar
+	    	FileEncryptor.encryptUsers(inputFile, "./src/userCatalogEncrypted.txt", pass);
+	        System.out.println("Ficheiro cifrado com sucesso.");
+	        File usersCatalogC = new File(inputFile);
+	        usersCatalogC.delete();
+	        
+	    } catch (Exception ex) {
+	        System.out.println("Ocorreu um erro: " + ex.getMessage());
+	        ex.printStackTrace();
+	    }
+	}
+	
 }

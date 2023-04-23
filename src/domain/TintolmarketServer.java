@@ -65,13 +65,16 @@ public class TintolmarketServer {
 		}
 		
 	    try {
+	    	
 	        // Cifrar
-	    	FileEncryptor.encryptUsers(USERSCATFILE, "./src/encrypted.txt", passwordCifra);
+	    	FileEncryptor.encryptUsers(USERSCATFILE, "./src/userCatalogEncrypted.txt", passwordCifra);
 	        System.out.println("Ficheiro cifrado com sucesso.");
+	        File usersCatalog = new File(USERSCATFILE);
+	        usersCatalog.delete();
 
-	        // Decifrar (dps colocar no sitio onde e suposto)
-	        UserCatalog.decryptUsers("./src/encrypted.txt", "./src/decrypted.txt", passwordCifra);
-	        System.out.println("Ficheiro decifrado com sucesso.");
+	        // Decifrar e Cifrar (chamar sempre que se acede ao ficheiro)
+	        FileEncryptor.decryptEncryptUsers(USERSCATFILE, passwordCifra);
+	        System.out.println("Decrypt Encrypt com sucesso.");
 	        
 	    } catch (Exception ex) {
 	        System.out.println("Ocorreu um erro: " + ex.getMessage());
@@ -132,6 +135,7 @@ public class TintolmarketServer {
 	}
 
 	private synchronized void initializeUserCatalog() {
+		
 		File usersFile = new File(USERSCATFILE);
 
 		Scanner fileSc = null;
