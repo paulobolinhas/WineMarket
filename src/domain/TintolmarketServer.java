@@ -28,6 +28,7 @@ import catalogs.SellsCatalog;
 import catalogs.UserCatalog;
 import catalogs.WineCatalog;
 import entities.AuthenticationValidator;
+import entities.FileEncryptor;
 
 public class TintolmarketServer {
 
@@ -62,6 +63,20 @@ public class TintolmarketServer {
 		if (args.length == 4) {
 			port = Integer.parseInt(args[0]);
 		}
+		
+	    try {
+	        // Cifrar
+	    	FileEncryptor.encryptUsers(USERSCATFILE, "./src/encrypted.txt", passwordCifra);
+	        System.out.println("Ficheiro cifrado com sucesso.");
+
+	        // Decifrar (dps colocar no sitio onde e suposto)
+	        UserCatalog.decryptUsers("./src/encrypted.txt", "./src/decrypted.txt", passwordCifra);
+	        System.out.println("Ficheiro decifrado com sucesso.");
+	        
+	    } catch (Exception ex) {
+	        System.out.println("Ocorreu um erro: " + ex.getMessage());
+	        ex.printStackTrace();
+	    }
 
 		System.setProperty("javax.net.ssl.keyStore", "src//keys//" + serverKeystore);
 		System.setProperty("javax.net.ssl.keyStorePassword", passwordServerKeystore);

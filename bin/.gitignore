@@ -1,6 +1,6 @@
-/domain/
-/Entities/
-/entities/
-/catalogs/
 /certificates/
-/keys/
+/domain/
+/entities/
+/decrypted.txt
+/encrypted.txt
+/catalogs/
