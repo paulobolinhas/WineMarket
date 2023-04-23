@@ -2,6 +2,7 @@ package catalogs;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -9,6 +10,7 @@ import java.security.AlgorithmParameters;
 import java.security.GeneralSecurityException;
 import java.security.spec.KeySpec;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
@@ -141,6 +143,40 @@ public class UserCatalog {
 	    fis.close();
 	    fos.flush();
 	    fos.close();
+	}
+	
+	public void initializeUserCatalog() {
+		File usersFile = new File(this.usersStr);
+		
+		Scanner fileSc = null;
+		try {
+			fileSc = new Scanner(usersFile);
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+		}
+
+		while (fileSc.hasNextLine()) {
+			String[] currentLine = fileSc.nextLine().split(":");
+			this.add(new User(currentLine[0], currentLine[1]));
+		}
+
+		fileSc.close();
+		
+		File userWallets = new File(this.userWalletsStr);
+
+		Scanner walletSc = null;
+		try {
+			walletSc = new Scanner(userWallets);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+
+		while (walletSc.hasNextLine()) {
+			String[] currentLine = walletSc.nextLine().split(":");
+			this.getUserByID(currentLine[0]).setBalance(Integer.parseInt(currentLine[1]));
+		}
+
+		walletSc.close();
 	}
 
 
