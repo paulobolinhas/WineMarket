@@ -28,6 +28,7 @@ import catalogs.SellsCatalog;
 import catalogs.UserCatalog;
 import catalogs.WineCatalog;
 import entities.AuthenticationValidator;
+import entities.BlockChain;
 import entities.FileEncryptor;
 
 public class TintolmarketServer {
@@ -42,6 +43,7 @@ public class TintolmarketServer {
 	public static SellsCatalog sellsCatalog;
 	public static WineCatalog wineCatalog;
 	private static MessageCatalog messageCatalog;
+	private static BlockChain blockchain;
 
 	public static void main(String[] args) throws IOException {
 
@@ -51,6 +53,7 @@ public class TintolmarketServer {
 		sellsCatalog = SellsCatalog.getSellsCatalog();
 		wineCatalog = WineCatalog.getWineCatalog();
 		messageCatalog = MessageCatalog.getMessageCatalog();
+		blockchain = BlockChain.getInstance();
 
 		TintolmarketServer tintolServer = new TintolmarketServer();
 
