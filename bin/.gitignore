@@ -1,2 +1,10 @@
+<<<<<<< HEAD
 /imgClient/
 /imgServer/
+=======
+/entities/
+/domain/
+/userCatalogEncrypted.txt
+/usersCatalog.txt
+/catalogs/
+>>>>>>> 22c50ccabfddea9566d9b270675b281ed8b3c53d
