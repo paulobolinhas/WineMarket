@@ -1,6 +1,2 @@
-/certificates/
-/domain/
-/entities/
-/decrypted.txt
-/encrypted.txt
-/catalogs/
+/imgClient/
+/imgServer/
