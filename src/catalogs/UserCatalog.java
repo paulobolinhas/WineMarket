@@ -47,7 +47,7 @@ public class UserCatalog {
 	
 	public void initializeUserCatalog() {
 		
-		Scanner usersCatalogDecrypted = new Scanner (FileEncryptorDecryptor.decryptUsersCat(this.usersStr, passwordUsers));
+		Scanner usersCatalogDecrypted = new Scanner(FileEncryptorDecryptor.decryptUsersCat(this.usersStr, passwordUsers));
 
 		while (usersCatalogDecrypted.hasNextLine()) {
 			String[] currentLine = usersCatalogDecrypted.nextLine().split(":");

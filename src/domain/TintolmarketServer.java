@@ -91,7 +91,6 @@ public class TintolmarketServer {
 
 		if (usersCatFile.exists()) {
 			FileEncryptorDecryptor.encryptUsersCat(USERSCATFILE, passwordCifra);
-
 		}
 
 		// ------------------------------------
