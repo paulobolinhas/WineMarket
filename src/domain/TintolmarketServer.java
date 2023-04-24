@@ -70,13 +70,8 @@ public class TintolmarketServer {
 		// ------------------------------------
 		// CIFRA
 		File usersCatFile = new File(USERSCATFILE);
-		File usersCatFileEncrypted = new File(USERSCATFILENCRYPTED);
 
 		if (usersCatFile.exists()) {
-			FileEncryptorDecryptor.encryptUsersCat(USERSCATFILE, passwordCifra);
-
-		} else if (usersCatFileEncrypted.exists()) {
-			FileEncryptorDecryptor.decryptUsersCat(USERSCATFILE, passwordCifra);
 			FileEncryptorDecryptor.encryptUsersCat(USERSCATFILE, passwordCifra);
 
 		}
