@@ -1,21 +1,14 @@
-<<<<<<< HEAD
-/certificates/
-/entities/
-/domain/
-=======
+/blockchain/
 /catalogs/
 /certificates/
 /domain/
 /entities/
+/enums/
 /imgClient/
-/imgServer/
 /keys/
 /messageCatalog.txt
 /sellsCatalog.txt
-/userCatalog.txt
+/userCatalogEncrypted.txt
 /userWallet.txt
 /wineCatalog.txt
-/userCatalogEncrypted.txt
->>>>>>> main
-/blockchain/
-/userCatalog
+/userCatalog.txt
