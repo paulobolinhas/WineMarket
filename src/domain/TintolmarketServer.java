@@ -19,6 +19,7 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Scanner;
+
 import javax.net.ServerSocketFactory;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
@@ -35,7 +36,7 @@ import enums.TransactionType;
 
 public class TintolmarketServer {
 
-	public static final String USERSCATFILE = "./src/usersCatalog.txt";
+	public static final String USERSCATFILE = "./src/userCatalog.txt";
 	public static final String USERSCATFILENCRYPTED = "./src/userCatalogEncrypted.txt";
 	public static final String WINECATFILE = "./src/wineCatalog.txt";
 	public static final String SELLSCATFILE = "./src/sellsCatalog.txt";
@@ -114,10 +115,10 @@ public class TintolmarketServer {
 		initializeWineCatalog();
 		initializeMessagesStore();
 
-
 		blockchain.initializeBlockChain();
-		//aqui nao basta apenas isto. tem de ser criado o metodo que carrega a blockchain para a memoria
-		//este metodo so pode ficar aqui se nao existir blockchain ainda
+		// aqui nao basta apenas isto. tem de ser criado o metodo que carrega a
+		// blockchain para a memoria
+		// este metodo so pode ficar aqui se nao existir blockchain ainda
 		try {
 			blockchain.createBlock();
 		} catch (IOException e) {
@@ -216,10 +217,10 @@ public class TintolmarketServer {
 					e1.printStackTrace();
 				}
 
-				String certificadoStr = "client"+clientID+"KeyRSApub.cer";
+				String certificadoStr = "client" + clientID + "KeyRSApub.cer";
 				clientExistsFlag = userCatalog.exists(clientID);
 
-				//indicar o cliente se ele existe ou nao
+				// indicar o cliente se ele existe ou nao
 				outStream.writeObject(clientExistsFlag);
 
 				AuthenticationValidator authValidator = new AuthenticationValidator(inStream, outStream);
@@ -261,7 +262,8 @@ public class TintolmarketServer {
 						outStream.writeObject("Novo cliente " + clientID + " registado");
 					}
 
-				} catch (ClassNotFoundException | KeyStoreException | NoSuchAlgorithmException | InvalidKeyException | SignatureException | CertificateException e) {
+				} catch (ClassNotFoundException | KeyStoreException | NoSuchAlgorithmException | InvalidKeyException
+						| SignatureException | CertificateException e) {
 					System.out.println("ERRO - Um problema ocorreu com a validacao da autenticacao.");
 					e.printStackTrace();
 				}
@@ -284,7 +286,7 @@ public class TintolmarketServer {
 				while (!userAction.equals("exit")) {
 
 					outStream.writeObject(menu);
-					
+
 					try {
 						userAction = (String) inStream.readObject();
 					} catch (ClassNotFoundException e) {
@@ -351,18 +353,19 @@ public class TintolmarketServer {
 
 		private String addFunc(String wineID, String image) throws IOException {
 
-			//			ReceiveImagesHandler rcvImgHandler = new ReceiveImagesHandler(inStream, "./src/imgServer/");
+			// ReceiveImagesHandler rcvImgHandler = new ReceiveImagesHandler(inStream,
+			// "./src/imgServer/");
 			//
-			//			if (wineCatalog.exists(wineID)) {
-			//				rcvImgHandler.consumeInput(); // assumindo que a imagem existe
-			//				return "This wine already exists.";
-			//			}
+			// if (wineCatalog.exists(wineID)) {
+			// rcvImgHandler.consumeInput(); // assumindo que a imagem existe
+			// return "This wine already exists.";
+			// }
 			//
-			//			try {
-			//				rcvImgHandler.receiveImage(image);
-			//			} catch (IOException e) {
-			//				e.printStackTrace();
-			//			}
+			// try {
+			// rcvImgHandler.receiveImage(image);
+			// } catch (IOException e) {
+			// e.printStackTrace();
+			// }
 
 			String wineRegist = "";
 			if (wineCatalog.getSize() == 0)
@@ -406,19 +409,20 @@ public class TintolmarketServer {
 
 			try {
 
-				Transaction currentTransaction = blockchain.createTransaction(TransactionType.SELL, wineID, quantity, value, seller);
+				Transaction currentTransaction = blockchain.createTransaction(TransactionType.SELL, wineID, quantity,
+						value, seller);
 				System.out.println("Enviar confirmacao de VENDA ao cliente para obter a assinatura");
 				outStream.writeObject("Do you want to confirm the SELL operation? (yes or no)");
 
-				String confirmation = (String) inStream.readObject(); //Receber confirmacao
+				String confirmation = (String) inStream.readObject(); // Receber confirmacao
 
 				if (confirmation.equals("yes"))
 					outStream.writeObject(currentTransaction.getDataToSign());
 				else
 					return "Sell Operation canceled";
-				//adicionar o que acontece se nao
+				// adicionar o que acontece se nao
 
-				inStream.readObject(); //data que n deve ser necessária
+				inStream.readObject(); // data que n deve ser necessï¿½ria
 				byte[] signedContent = (byte[]) inStream.readObject();
 
 				currentTransaction.setSignature(signedContent);
@@ -427,7 +431,7 @@ public class TintolmarketServer {
 
 			} catch (ClassNotFoundException | IOException e) {
 				e.printStackTrace();
-			} 
+			}
 
 			String wineRegist = "";
 
@@ -443,7 +447,6 @@ public class TintolmarketServer {
 			}
 
 			sellsCatalog.add(new Sell(wineID, wine.getImage(), value, quantity, seller));
-
 
 			return "Wine is now on sale.";
 		}
@@ -465,7 +468,7 @@ public class TintolmarketServer {
 					for (Sell sell : wineSales) {
 						if (sell.getQuantity() > 0) {
 							result.append(" Seller: " + sell.getSeller() + "; Value: " + sell.getValue()
-							+ "; Quantity: " + sell.getQuantity() + "\n");
+									+ "; Quantity: " + sell.getQuantity() + "\n");
 						}
 					}
 				}
@@ -512,20 +515,20 @@ public class TintolmarketServer {
 
 			try {
 
-				Transaction currentTransaction = blockchain.createTransaction(TransactionType.BUY, wineID, quantityToBuy, winePrice, clientID);
+				Transaction currentTransaction = blockchain.createTransaction(TransactionType.BUY, wineID,
+						quantityToBuy, winePrice, clientID);
 				System.out.println("Enviar confirmacao de VENDA ao cliente para obter a assinatura");
 				outStream.writeObject("Do you want to confirm the BUY operation? (yes or no)");
 
-
-				String confirmation = (String) inStream.readObject(); //Receber confirmacao
+				String confirmation = (String) inStream.readObject(); // Receber confirmacao
 
 				if (confirmation.equals("yes"))
 					outStream.writeObject(currentTransaction.getDataToSign());
 				else
 					return "BUY Operation canceled";
-				//adicionar o que acontece se nao
+				// adicionar o que acontece se nao
 
-				inStream.readObject(); //data que n deve ser necessária
+				inStream.readObject(); // data que n deve ser necessï¿½ria
 				byte[] signedContent = (byte[]) inStream.readObject();
 
 				currentTransaction.setSignature(signedContent);
@@ -534,7 +537,7 @@ public class TintolmarketServer {
 
 			} catch (ClassNotFoundException | IOException e) {
 				e.printStackTrace();
-			} 
+			}
 
 			int clientNewBalance = walletFunc(clientID) - quantityToBuy * winePrice;
 			int sellerNewBalance = walletFunc(sellerID) + quantityToBuy * winePrice;
@@ -766,7 +769,7 @@ public class TintolmarketServer {
 							String newContentBuy = oldContent.replace(wineFileLine, newStringBuy);
 							newContentWithoutNewLine = newContentBuy.substring(0, newContentBuy.length() - 2);
 							sellsCatalog.getSale(wineFileLineSplitted[0], wineFileLineSplitted[4])
-							.setQuantity(Integer.parseInt(wineFileLineSplitted[3]) - quantity);
+									.setQuantity(Integer.parseInt(wineFileLineSplitted[3]) - quantity);
 							break;
 
 						case "sell":
@@ -778,7 +781,7 @@ public class TintolmarketServer {
 							String newContentSell = oldContent.replace(wineFileLine, newStringSell);
 							newContentWithoutNewLine = newContentSell.substring(0, newContentSell.length() - 2);
 							sellsCatalog.getSale(wineFileLineSplitted[0], wineFileLineSplitted[4])
-							.setQuantity(Integer.parseInt(wineFileLineSplitted[3]) + quantity);
+									.setQuantity(Integer.parseInt(wineFileLineSplitted[3]) + quantity);
 							sellsCatalog.getSale(wineFileLineSplitted[0], wineFileLineSplitted[4]).setValue(value);
 							break;
 
@@ -792,7 +795,7 @@ public class TintolmarketServer {
 									newContentSellDifPrice.length() - 2);
 
 							sellsCatalog.getSale(wineFileLineSplitted[0], wineFileLineSplitted[4])
-							.setQuantity(quantity);
+									.setQuantity(quantity);
 							sellsCatalog.getSale(wineFileLineSplitted[0], wineFileLineSplitted[4]).setValue(value);
 							break;
 
