@@ -1,19 +1,13 @@
 hash: 00000000
 block_id: 1
-n_trx: 0
+n_trx: 1
 --------
 TRANSACTION: 1
 type: Sell
 wine: vinho
 number of units: 100
-price per unit: 2
+price per unit: 1
 owner: 1
-signature: [B@50789581
+owner signature: [B@754d9430
 --------
-TRANSACTION: 2
-type: Buy
-wine: vinho
-number of units: 2
-price per unit: 2
-owner: 2
-signature: [B@5258c7ca
+Server Signature: [B@7daaf84e

@@ -55,7 +55,7 @@ public class Transaction {
 				"\nnumber of units: " + this.unitsNum +
 				"\nprice per unit: " + this.unitPrice +
 				"\nowner: " + this.transactionOwner+
-				"\nsignature: " + this.signedContent;
+				"\nowner signature: " + this.signedContent;
 	}
 
 	public void setSignature(byte[] signedContent) {

@@ -14,6 +14,13 @@ public class Block {
 	private List<Transaction> transactions;
 	//assinatura aqui;
 	
+	public Block(long block_id, byte[] previousHash) {
+		this.block_id = block_id;
+		this.n_trx = 0;
+		this.transactions = new ArrayList<>();
+		this.previousHash = previousHash;
+	}
+	
 	public Block(long block_id) {
 		this.block_id = block_id;
 		this.n_trx = 0;

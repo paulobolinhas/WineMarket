@@ -2,6 +2,7 @@ package domain;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -12,6 +13,7 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.security.InvalidKeyException;
+import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
@@ -22,6 +24,7 @@ import java.util.Scanner;
 import javax.net.ServerSocketFactory;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
+import java.security.PrivateKey;
 
 import catalogs.MessageCatalog;
 import catalogs.SellsCatalog;
@@ -57,8 +60,8 @@ public class TintolmarketServer {
 		// TintolmarketServer <port> <password-cifra> <keystore> <password-keystore>
 		int port = 12345;
 		String passwordCifra = args[1];
-		String serverKeystore = args[2];
-		String passwordServerKeystore = args[3];
+		String serverKeyAlias = args[2];
+		String passwordServerKeyStore = args[3];
 
 		if (args.length == 4) {
 			port = Integer.parseInt(args[0]);
@@ -68,8 +71,16 @@ public class TintolmarketServer {
 		sellsCatalog = SellsCatalog.getSellsCatalog();
 		wineCatalog = WineCatalog.getWineCatalog();
 		messageCatalog = MessageCatalog.getMessageCatalog();
-		blockchain = BlockChain.getInstance();
-
+		
+		try {
+			KeyStore serverKeys = KeyStore.getInstance("JKS");
+			serverKeys.load(new FileInputStream("./src/keys/"+serverKeyAlias), passwordServerKeyStore.toCharArray());
+			PrivateKey pk = (PrivateKey) serverKeys.getKey(serverKeyAlias, passwordServerKeyStore.toCharArray());
+			blockchain = BlockChain.getInstance(pk);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
 		File usersCatFile = new File(USERSCATFILE);
 		File usersCatFileEncrypted = new File(USERSCATFILENCRYPTED);
 
@@ -82,8 +93,8 @@ public class TintolmarketServer {
 
 		}
 
-		System.setProperty("javax.net.ssl.keyStore", "src//keys//" + serverKeystore);
-		System.setProperty("javax.net.ssl.keyStorePassword", passwordServerKeystore);
+		System.setProperty("javax.net.ssl.keyStore", "src//keys//" + serverKeyAlias);
+		System.setProperty("javax.net.ssl.keyStorePassword", passwordServerKeyStore);
 		ServerSocketFactory ssf = SSLServerSocketFactory.getDefault();
 		SSLServerSocket sslServerSocket = (SSLServerSocket) ssf.createServerSocket(port);
 
@@ -119,7 +130,7 @@ public class TintolmarketServer {
 		//aqui nao basta apenas isto. tem de ser criado o metodo que carrega a blockchain para a memoria
 		//este metodo so pode ficar aqui se nao existir blockchain ainda
 		try {
-			blockchain.createBlock();
+			blockchain.createBlock(null);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -425,7 +436,7 @@ public class TintolmarketServer {
 
 				blockchain.addTransaction(currentTransaction);
 
-			} catch (ClassNotFoundException | IOException e) {
+			} catch (ClassNotFoundException | IOException | InvalidKeyException | NoSuchAlgorithmException | SignatureException e) {
 				e.printStackTrace();
 			} 
 
@@ -532,7 +543,7 @@ public class TintolmarketServer {
 
 				blockchain.addTransaction(currentTransaction);
 
-			} catch (ClassNotFoundException | IOException e) {
+			} catch (ClassNotFoundException | IOException | InvalidKeyException | NoSuchAlgorithmException | SignatureException e) {
 				e.printStackTrace();
 			} 
 
@@ -733,11 +744,8 @@ public class TintolmarketServer {
 					isFound = true;
 
 					File fileToBeModified = new File(filename);
-
 					String oldContent = "";
-
 					BufferedReader reader = null;
-
 					FileWriter writer = null;
 
 					try {

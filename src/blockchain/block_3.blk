@@ -1,0 +1,11 @@
+hash: [B@24051a1d
+block_id: 3
+n_trx: 1
+--------
+TRANSACTION: 3
+type: Buy
+wine: vinho
+number of units: 1
+price per unit: 1
+owner: 2
+owner signature: [B@2cc359ab
