@@ -3,8 +3,6 @@ package entities;
 import javax.crypto.*;
 import javax.crypto.spec.*;
 
-import catalogs.UserCatalog;
-
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
@@ -58,7 +56,7 @@ public class FileEncryptorDecryptor {
 															// corresponder dos dois lados sem dar erro)
 		Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
 
-		// salt aleatorio
+		// salt aleatorio - garante que, mesmo que duas pessoas usem a mesma pass, as chaves criadas serão diferentes
 		salt = generateSalt();
 
 		// cria uma key secreta para se usar na cifra
@@ -66,7 +64,7 @@ public class FileEncryptorDecryptor {
 		SecretKey tmp = keyFactory.generateSecret(keySpec);
 		SecretKey key = new SecretKeySpec(tmp.getEncoded(), "AES");
 
-		// iv aleatorio (vetor inicializacao)
+		// iv aleatorio (vetor inicializacao) - permite que blocos parecidos de texto não sejam criptografados da mesma forma
 		byte[] iv = new byte[16];
 		SecureRandom random = new SecureRandom();
 		random.nextBytes(iv);
