@@ -19,6 +19,7 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Scanner;
+
 import javax.net.ServerSocketFactory;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
@@ -33,7 +34,7 @@ import entities.IntegrationChecker;
 
 public class TintolmarketServer {
 
-	public static final String USERSCATFILE = "./src/usersCatalog.txt";
+	public static final String USERSCATFILE = "./src/userCatalog.txt";
 	public static final String USERSCATFILENCRYPTED = "./src/userCatalogEncrypted.txt";
 	public static final String WINECATFILE = "./src/wineCatalog.txt";
 	public static final String SELLSCATFILE = "./src/sellsCatalog.txt";
@@ -82,16 +83,16 @@ public class TintolmarketServer {
 
 		// ------------------------------------
 		// INTEGRIDADE
-		
+
 		File integridadeVerificadaWine = new File(WINECATFILE);
 		File integridadeVerificadaSell = new File(SELLSCATFILE);
 		File integridadeVerificadaMsg = new File(MSGCATFILE);
 		File integridadeVerificadaWallet = new File(WALLETFILE);
 
-		if (IntegrationChecker.checkSumIntegrityVerification(integridadeVerificadaWine, WINECATFILE) && 
-				IntegrationChecker.checkSumIntegrityVerification(integridadeVerificadaSell, SELLSCATFILE) && 
-				IntegrationChecker.checkSumIntegrityVerification(integridadeVerificadaMsg, MSGCATFILE) && 
-				IntegrationChecker.checkSumIntegrityVerification(integridadeVerificadaWallet, WALLETFILE)) {
+		if (IntegrationChecker.checkSumIntegrityVerification(integridadeVerificadaWine, WINECATFILE)
+				&& IntegrationChecker.checkSumIntegrityVerification(integridadeVerificadaSell, SELLSCATFILE)
+				&& IntegrationChecker.checkSumIntegrityVerification(integridadeVerificadaMsg, MSGCATFILE)
+				&& IntegrationChecker.checkSumIntegrityVerification(integridadeVerificadaWallet, WALLETFILE)) {
 			System.out.println("Os ficheiros estão íntegros.");
 		} else {
 			System.exit(0);
@@ -224,10 +225,10 @@ public class TintolmarketServer {
 					e1.printStackTrace();
 				}
 
-				String certificadoStr = "client"+clientID+"KeyRSApub.cer";
+				String certificadoStr = "client" + clientID + "KeyRSApub.cer";
 				clientExistsFlag = userCatalog.exists(clientID);
 
-				//indicar o cliente se ele existe ou nao
+				// indicar o cliente se ele existe ou nao
 				outStream.writeObject(clientExistsFlag);
 
 				AuthenticationValidator authValidator = new AuthenticationValidator(inStream, outStream);
@@ -269,7 +270,8 @@ public class TintolmarketServer {
 						outStream.writeObject("Novo cliente " + clientID + " registado");
 					}
 
-				} catch (ClassNotFoundException | KeyStoreException | NoSuchAlgorithmException | InvalidKeyException | SignatureException | CertificateException e) {
+				} catch (ClassNotFoundException | KeyStoreException | NoSuchAlgorithmException | InvalidKeyException
+						| SignatureException | CertificateException e) {
 					System.out.println("ERRO - Um problema ocorreu com a validacao da autenticacao.");
 					e.printStackTrace();
 				}
@@ -447,7 +449,7 @@ public class TintolmarketServer {
 					for (Sell sell : wineSales) {
 						if (sell.getQuantity() > 0) {
 							result.append(" Seller: " + sell.getSeller() + "; Value: " + sell.getValue()
-							+ "; Quantity: " + sell.getQuantity() + "\n");
+									+ "; Quantity: " + sell.getQuantity() + "\n");
 						}
 					}
 				}
@@ -722,7 +724,7 @@ public class TintolmarketServer {
 							String newContentBuy = oldContent.replace(wineFileLine, newStringBuy);
 							newContentWithoutNewLine = newContentBuy.substring(0, newContentBuy.length() - 2);
 							sellsCatalog.getSale(wineFileLineSplitted[0], wineFileLineSplitted[4])
-							.setQuantity(Integer.parseInt(wineFileLineSplitted[3]) - quantity);
+									.setQuantity(Integer.parseInt(wineFileLineSplitted[3]) - quantity);
 							break;
 
 						case "sell":
@@ -734,7 +736,7 @@ public class TintolmarketServer {
 							String newContentSell = oldContent.replace(wineFileLine, newStringSell);
 							newContentWithoutNewLine = newContentSell.substring(0, newContentSell.length() - 2);
 							sellsCatalog.getSale(wineFileLineSplitted[0], wineFileLineSplitted[4])
-							.setQuantity(Integer.parseInt(wineFileLineSplitted[3]) + quantity);
+									.setQuantity(Integer.parseInt(wineFileLineSplitted[3]) + quantity);
 							sellsCatalog.getSale(wineFileLineSplitted[0], wineFileLineSplitted[4]).setValue(value);
 							break;
 
@@ -748,7 +750,7 @@ public class TintolmarketServer {
 									newContentSellDifPrice.length() - 2);
 
 							sellsCatalog.getSale(wineFileLineSplitted[0], wineFileLineSplitted[4])
-							.setQuantity(quantity);
+									.setQuantity(quantity);
 							sellsCatalog.getSale(wineFileLineSplitted[0], wineFileLineSplitted[4]).setValue(value);
 							break;
 
