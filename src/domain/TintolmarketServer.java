@@ -36,6 +36,8 @@ import entities.BlockChain;
 import entities.FileEncryptorDecryptor;
 import entities.Transaction;
 import enums.TransactionType;
+import entities.IntegrationChecker;
+
 
 public class TintolmarketServer {
 
@@ -81,21 +83,37 @@ public class TintolmarketServer {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+
+		// ------------------------------------
+		// CIFRA
+
 		File usersCatFile = new File(USERSCATFILE);
-		File usersCatFileEncrypted = new File(USERSCATFILENCRYPTED);
 
 		if (usersCatFile.exists()) {
 			FileEncryptorDecryptor.encryptUsersCat(USERSCATFILE, passwordCifra);
 
-		} else if (usersCatFileEncrypted.exists()) {
-			FileEncryptorDecryptor.decryptUsersCat(USERSCATFILE, passwordCifra);
-			FileEncryptorDecryptor.encryptUsersCat(USERSCATFILE, passwordCifra);
+		}
 
+		// ------------------------------------
+		// INTEGRIDADE
+
+		File integridadeVerificadaWine = new File(WINECATFILE);
+		File integridadeVerificadaSell = new File(SELLSCATFILE);
+		File integridadeVerificadaMsg = new File(MSGCATFILE);
+		File integridadeVerificadaWallet = new File(WALLETFILE);
+
+		if (IntegrationChecker.checkSumIntegrityVerification(integridadeVerificadaWine, WINECATFILE)
+				&& IntegrationChecker.checkSumIntegrityVerification(integridadeVerificadaSell, SELLSCATFILE)
+				&& IntegrationChecker.checkSumIntegrityVerification(integridadeVerificadaMsg, MSGCATFILE)
+				&& IntegrationChecker.checkSumIntegrityVerification(integridadeVerificadaWallet, WALLETFILE)) {
+			System.out.println("Os ficheiros estao integros.");
+		} else {
+			System.exit(0);
 		}
 
 		System.setProperty("javax.net.ssl.keyStore", "src//keys//" + serverKeyAlias);
 		System.setProperty("javax.net.ssl.keyStorePassword", passwordServerKeyStore);
+		
 		ServerSocketFactory ssf = SSLServerSocketFactory.getDefault();
 		SSLServerSocket sslServerSocket = (SSLServerSocket) ssf.createServerSocket(port);
 

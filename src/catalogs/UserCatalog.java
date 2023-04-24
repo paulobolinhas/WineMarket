@@ -47,25 +47,14 @@ public class UserCatalog {
 	
 	public void initializeUserCatalog() {
 		
-		FileEncryptorDecryptor.decryptUsersCat(this.usersStr, passwordUsers);
-		
-		File usersFile = new File(this.usersStr);
-		
-		Scanner fileSc = null;
-		try {
-			fileSc = new Scanner(usersFile);
-		} catch (FileNotFoundException e1) {
-			e1.printStackTrace();
-		}
+		Scanner usersCatalogDecrypted = new Scanner (FileEncryptorDecryptor.decryptUsersCat(this.usersStr, passwordUsers));
 
-		while (fileSc.hasNextLine()) {
-			String[] currentLine = fileSc.nextLine().split(":");
+		while (usersCatalogDecrypted.hasNextLine()) {
+			String[] currentLine = usersCatalogDecrypted.nextLine().split(":");
 			this.add(new User(currentLine[0], currentLine[1]));
 		}
 
-		fileSc.close();
-		
-		FileEncryptorDecryptor.encryptUsersCat(this.usersStr, passwordUsers);
+		usersCatalogDecrypted.close();
 		
 		File userWallets = new File(this.userWalletsStr);
 
