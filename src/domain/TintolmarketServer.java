@@ -219,13 +219,15 @@ public class TintolmarketServer {
 		private Socket socket = null;
 		private ObjectOutputStream outStream;
 		private ObjectInputStream inStream;
-
+		private AuthenticationValidator authValidator;
+		
 		ClientHandler(Socket sslServerSocket) {
 			socket = sslServerSocket;
 
 			try {
 				outStream = new ObjectOutputStream(socket.getOutputStream());
 				inStream = new ObjectInputStream(socket.getInputStream());
+				authValidator = new AuthenticationValidator(inStream, outStream);
 			} catch (IOException e) {
 				e.printStackTrace();
 				System.out.println("Erro nas streams da socket");
@@ -235,7 +237,6 @@ public class TintolmarketServer {
 		public void run() {
 			try {
 
-				System.out.println("New client connected.");
 				String clientID = null;
 				boolean clientExistsFlag = false;
 
@@ -252,7 +253,6 @@ public class TintolmarketServer {
 				// indicar o cliente se ele existe ou nao
 				outStream.writeObject(clientExistsFlag);
 
-				AuthenticationValidator authValidator = new AuthenticationValidator(inStream, outStream);
 				authValidator.sendNonce();
 
 				try {
@@ -260,8 +260,8 @@ public class TintolmarketServer {
 					Long nonceFromClient = authValidator.receiveNonce();
 					System.out.println("Nonce recebido do cliente: " + nonceFromClient);
 
-					byte[] signature = authValidator.receiveSignature();
-					System.out.println("Assinatura do cliente recebida");
+					byte[] signedContent = authValidator.receiveSignature();
+					System.out.println("Conteudo assinado recebido do cliente");
 
 					Certificate certificate = null;
 
@@ -274,7 +274,7 @@ public class TintolmarketServer {
 
 					authValidator.loadPublicKey(certificate);
 
-					boolean isClientValid = authValidator.verifySignature(nonceFromClient, signature);
+					boolean isClientValid = authValidator.verifySignature(nonceFromClient, signedContent);
 					outStream.writeObject(isClientValid);
 
 					if (!isClientValid) {
@@ -441,7 +441,7 @@ public class TintolmarketServer {
 
 				Transaction currentTransaction = blockchain.createTransaction(TransactionType.SELL, wineID, quantity,
 						value, seller);
-				System.out.println("Enviar confirmacao de VENDA ao cliente para obter a assinatura");
+				
 				outStream.writeObject("Do you want to confirm the SELL operation? (yes or no)");
 
 				String confirmation = (String) inStream.readObject(); // Receber confirmacao
@@ -449,14 +449,20 @@ public class TintolmarketServer {
 				if (confirmation.equals("yes"))
 					outStream.writeObject(currentTransaction.getDataToSign());
 				else
-					return "Sell Operation canceled";
+					return "SELL operation canceled";
 				// adicionar o que acontece se nao
 
-				inStream.readObject(); // data que n deve ser necess�ria
+				String dataToVerify = (String) inStream.readObject();
 				byte[] signedContent = (byte[]) inStream.readObject();
 
 				currentTransaction.setSignature(signedContent);
 
+				//verificar assinatura
+				boolean isSignatureValid = authValidator.verifySignature(dataToVerify, signedContent);
+				
+				if (!isSignatureValid)
+					return "Content signed incorrect, SELL operation canceled";
+				
 				blockchain.addTransaction(currentTransaction);
 
 			} catch (ClassNotFoundException | IOException | InvalidKeyException | NoSuchAlgorithmException
@@ -556,13 +562,19 @@ public class TintolmarketServer {
 				if (confirmation.equals("yes"))
 					outStream.writeObject(currentTransaction.getDataToSign());
 				else
-					return "BUY Operation canceled";
+					return "BUY operation canceled";
 				// adicionar o que acontece se nao
 
-				inStream.readObject(); // data que n deve ser necess�ria
+				String dataToVerify = (String) inStream.readObject();
 				byte[] signedContent = (byte[]) inStream.readObject();
 
 				currentTransaction.setSignature(signedContent);
+
+				//verificar assinatura
+				boolean isSignatureValid = authValidator.verifySignature(dataToVerify, signedContent);
+				
+				if (!isSignatureValid)
+					return "Content signed incorrect, BUY operation canceled";
 
 				blockchain.addTransaction(currentTransaction);
 

@@ -1,5 +1,6 @@
 package entities;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,6 +27,7 @@ public class Block {
 		this.block_id = block_id;
 		this.n_trx = 0;
 		this.transactions = new ArrayList<>();
+		this.previousHash = new byte[8];
 	}
 
 	public Block(long blockID, byte[] previousHash2, int nTrx, List<Transaction> transactions2) {
@@ -57,7 +59,7 @@ public class Block {
 	}
 
 	public String getFstHeader() {
-		return "hash: 00000000" + "\nblock_id: " + this.block_id + "\nn_trx: " + this.n_trx;
+		return "hash: " + String.format("%032X", new BigInteger(1, this.previousHash)) + "\nblock_id: " + this.block_id + "\nn_trx: " + this.n_trx;
 	}
 
 	public void addTransaction(Transaction t) {

@@ -87,14 +87,11 @@ public class BlockChain {
 		int transactionsPerBlock = 2;
 
 		if (this.currentBlock.getN_trx() == transactionsPerBlock) {
-			// adicionar metodo para assinar o bloco.
-			// retornar hash com assinatura
 
 			Signature s = Signature.getInstance("SHA256withRSA");
 			s.initSign(this.serverPK);
 
 			String content = new String(Files.readAllBytes(Paths.get(this.getCurrentPath())));
-			// System.out.println("BLOCK CONTENT:\n"+content);
 
 			s.update(content.getBytes());
 			byte[] signedContent = s.sign();
@@ -102,12 +99,8 @@ public class BlockChain {
 			FileWriter blockFile = new FileWriter(this.getCurrentPath(), true);
 			blockFile.write("\n--------\nServer Signature: " + signedContent);
 			blockFile.flush();
+			
 			try {
-				// De seguida criar outro bloco. Como current block � atualizado, o codigo a
-				// seguir escreve
-				// automaticamente no proximo ficheiro.
-				// passar o hash com a assinatura no metodo para colocar no inicio do proximo
-				// bloco
 				MessageDigest digest = MessageDigest.getInstance("SHA-256");
 				byte[] previousHash = digest.digest(signedContent);
 				this.createBlock(previousHash);
@@ -115,9 +108,6 @@ public class BlockChain {
 				e.printStackTrace();
 			}
 		}
-
-		// Aqui nao basta escrever, tem q se alterar o numero de transacoes entao tem q
-		// se substituir
 
 		String newContent = this.getNewContent(t, transactionsPerBlock);
 		FileWriter blockFile = new FileWriter(this.getCurrentPath());
@@ -186,7 +176,7 @@ public class BlockChain {
 			String[] lines = content.split("\n");
 
 			// Parse block information
-			byte[] previousHash = parseHash(lines[0]);
+			byte[] previousHash = parseHash(lines[0]); //verificar este hash com a ultima assinatura
 			long blockID = Long.parseLong(lines[1].split(": ")[1].replaceAll("\\r", ""));
 			int nTrx = Integer.parseInt(lines[2].split(": ")[1].replaceAll("\\r", ""));
 
@@ -221,6 +211,7 @@ public class BlockChain {
 			if (lines[lines.length - 1].contains("Server Signature")) {
 				byte[] serverSignature = parseSignature(lines[lines.length - 1].split(": ")[1]);
 				block.setServerSignature(serverSignature);
+				
 			}
 
 			this.currentBlock = block;

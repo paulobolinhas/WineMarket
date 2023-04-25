@@ -74,6 +74,13 @@ public class AuthenticationValidator {
 		return s.verify(signature);
 	}
 	
+	public boolean verifySignature(String data, byte[] signature) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+		Signature s = this.getSignature();
+		s.initVerify(this.clientPublicKey);
+		s.update(data.getBytes());
+		return s.verify(signature);
+	}
+	
 	public Certificate receiveCertificate() throws ClassNotFoundException, IOException {
 		return (Certificate) inStream.readObject();
 	}
