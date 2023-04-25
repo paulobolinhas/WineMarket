@@ -1,14 +1,7 @@
-/blockchain/
-/catalogs/
-/certificates/
+/imgServer/
 /domain/
-/entities/
-/enums/
-/imgClient/
-/keys/
-/messageCatalog.txt
-/sellsCatalog.txt
+/blockchain/
 /userCatalogEncrypted.txt
-/userWallet.txt
 /wineCatalog.txt
 /userCatalog.txt
+/imgClient/

@@ -1,0 +1,11 @@
+hash: 00000000
+block_id: 1
+n_trx: 1
+--------
+TRANSACTION: 1
+type: Sell
+wine: vinhoTinto
+number of units: 10
+price per unit: 100
+owner: 1
+owner signature: [B@294529f5

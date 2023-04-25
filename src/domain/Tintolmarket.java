@@ -1,17 +1,14 @@
 package domain;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.security.InvalidKeyException;
-import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
-import java.security.Signature;
 import java.security.SignatureException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
@@ -37,7 +34,7 @@ public class Tintolmarket {
 		hostname = ipport[0];
 		if (ipport.length == 2)
 			port = Integer.parseInt(ipport[1]);
-		
+
 		String trustStore = args[1];
 		String keyStoreAlias = args[2];
 		String passKeyStoreString = args[3];
@@ -46,7 +43,7 @@ public class Tintolmarket {
 		System.setProperty("javax.net.ssl.trustStore", "src//keys//" + trustStore);
 		System.setProperty("javax.net.ssl.trustStorePassword", trustStore);
 		SocketFactory sf = SSLSocketFactory.getDefault();
-		
+
 		try (SSLSocket sslSocket = (SSLSocket) sf.createSocket(hostname, port)) {
 
 			ObjectOutputStream outStream = new ObjectOutputStream(sslSocket.getOutputStream());
@@ -63,31 +60,30 @@ public class Tintolmarket {
 				e.printStackTrace();
 			}
 
-		
 			ClientAuthentication clientAuth = new ClientAuthentication(inStream, outStream);
 			Long nonceFromServer = null;
-			
+
 			PrivateKey privateKey = null;
-			
+
 			try {
-				
+
 				nonceFromServer = clientAuth.receiveNonce();
 				System.out.println("nonce recebido do servidor: " + nonceFromServer);
-	
+
 				privateKey = clientAuth.loadKSAndPK(keyStoreAlias, passKeyStoreString);
-				clientAuth.SendSignature(nonceFromServer, privateKey); 
-				
+				clientAuth.SendSignature(nonceFromServer, privateKey);
+
 				if (!clientExistsFlag) {
 					Certificate certificate = clientAuth.getCertificate(keyStoreAlias);
-					
+
 					clientAuth.sendCertificate(certificate);
 				}
-				
-			} catch (ClassNotFoundException | UnrecoverableKeyException | KeyStoreException | NoSuchAlgorithmException | CertificateException | InvalidKeyException | SignatureException e) {
+
+			} catch (ClassNotFoundException | UnrecoverableKeyException | KeyStoreException | NoSuchAlgorithmException
+					| CertificateException | InvalidKeyException | SignatureException e) {
 				e.printStackTrace();
 			}
-			
-			
+
 			boolean isClientValid = false;
 			try {
 				isClientValid = (boolean) inStream.readObject();
@@ -103,7 +99,7 @@ public class Tintolmarket {
 				sslSocket.close();
 				System.exit(0);
 			}
-			
+
 			if (!clientExistsFlag)
 				try {
 					System.out.println((String) inStream.readObject());
@@ -116,7 +112,7 @@ public class Tintolmarket {
 				String userAction = "";
 
 				while (!userAction.equals("exit")) {
-					
+
 					System.out.println((String) inStream.readObject()); // menu
 					System.out.println("Choose action:\n");
 
@@ -126,40 +122,53 @@ public class Tintolmarket {
 
 					String[] userActionSplited = userAction.split(" ");
 
-//					if (userActionSplited[0].equals("add") || userActionSplited[0].equals("a")) {
-//
-//						SendImagesHandler sendImgHandler = new SendImagesHandler(outStream, "./src/imgClient/");
-//
-//						try {
-//							sendImgHandler.sendImage(userActionSplited[2]);
-//						} catch (IOException e) {
-//							e.printStackTrace();
-//						}
-//					}
-					
-					
-					System.out.println(inStream.readObject()); //mensagem de confirmacao
-					outStream.writeObject(clientInterface.nextLine()); //sim ou nao
-					
-					String dataToSign = (String) inStream.readObject();
-					
-					clientAuth.SendSignature(dataToSign, privateKey); //envia data e data assinado
-					
+					if (userActionSplited[0].equals("add") || userActionSplited[0].equals("a")) {
+
+						SendImagesHandler sendImgHandler = new SendImagesHandler(outStream, "./src/imgClient/");
+
+						try {
+							sendImgHandler.sendImage(userActionSplited[2]);
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+					}
+
+					if (userActionSplited[0].equals("sell") || userActionSplited[0].equals("s")
+							|| userActionSplited[0].equals("buy") || userActionSplited[0].equals("b")) {
+
+						// verificar se é a mensagem de confirmação ou erro no buy
+						String serverResponse = (String) inStream.readObject();
+
+						if (serverResponse.contains("Reasons why you can't buy this wine:")) {
+							System.out.println(serverResponse);
+							continue;
+						} else {
+
+							System.out.println(serverResponse); // mensagem de confirmacao
+							outStream.writeObject(clientInterface.nextLine()); // sim ou nao
+
+							String dataToSign = (String) inStream.readObject();
+
+							clientAuth.SendSignature(dataToSign, privateKey); // envia data e data assinado
+						}
+
+					}
+
 					String result = (String) inStream.readObject();
 					System.out.println(result);
 
-//					if ((userActionSplited[0].equals("view") || userActionSplited[0].equals("v"))
-//							&& !result.equals("This Wine doesnt exist")) {
-//
-//						String imgName = (String) inStream.readObject();
-//						ReceiveImagesHandler rcvImgHandler = new ReceiveImagesHandler(inStream, "./src/imgClient/");
-//
-//						try {
-//							rcvImgHandler.receiveImage(imgName);
-//						} catch (IOException e) {
-//							e.printStackTrace();
-//						}
-//					}
+					if ((userActionSplited[0].equals("view") || userActionSplited[0].equals("v"))
+							&& !result.equals("This Wine doesnt exist")) {
+
+						String imgName = (String) inStream.readObject();
+						ReceiveImagesHandler rcvImgHandler = new ReceiveImagesHandler(inStream, "./src/imgClient/");
+
+						try {
+							rcvImgHandler.receiveImage(imgName);
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+					}
 				}
 
 				clientInterface.close();
@@ -191,7 +200,7 @@ public class Tintolmarket {
 	private static long bytesToLong(byte[] bytes) {
 		ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
 		buffer.put(bytes);
-		buffer.flip();//need flip 
+		buffer.flip();// need flip
 		return buffer.getLong();
 	}
 

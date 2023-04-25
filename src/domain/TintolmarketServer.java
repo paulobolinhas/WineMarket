@@ -16,6 +16,7 @@ import java.security.InvalidKeyException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
 import java.security.SignatureException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
@@ -25,7 +26,6 @@ import java.util.Scanner;
 import javax.net.ServerSocketFactory;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
-import java.security.PrivateKey;
 
 import catalogs.MessageCatalog;
 import catalogs.SellsCatalog;
@@ -34,10 +34,9 @@ import catalogs.WineCatalog;
 import entities.AuthenticationValidator;
 import entities.BlockChain;
 import entities.FileEncryptorDecryptor;
+import entities.IntegrationChecker;
 import entities.Transaction;
 import enums.TransactionType;
-import entities.IntegrationChecker;
-
 
 public class TintolmarketServer {
 
@@ -74,10 +73,10 @@ public class TintolmarketServer {
 		sellsCatalog = SellsCatalog.getSellsCatalog();
 		wineCatalog = WineCatalog.getWineCatalog();
 		messageCatalog = MessageCatalog.getMessageCatalog();
-		
+
 		try {
 			KeyStore serverKeys = KeyStore.getInstance("JKS");
-			serverKeys.load(new FileInputStream("./src/keys/"+serverKeyAlias), passwordServerKeyStore.toCharArray());
+			serverKeys.load(new FileInputStream("./src/keys/" + serverKeyAlias), passwordServerKeyStore.toCharArray());
 			PrivateKey pk = (PrivateKey) serverKeys.getKey(serverKeyAlias, passwordServerKeyStore.toCharArray());
 			blockchain = BlockChain.getInstance(pk);
 		} catch (Exception e) {
@@ -112,7 +111,7 @@ public class TintolmarketServer {
 
 		System.setProperty("javax.net.ssl.keyStore", "src//keys//" + serverKeyAlias);
 		System.setProperty("javax.net.ssl.keyStorePassword", passwordServerKeyStore);
-		
+
 		ServerSocketFactory ssf = SSLServerSocketFactory.getDefault();
 		SSLServerSocket sslServerSocket = (SSLServerSocket) ssf.createServerSocket(port);
 
@@ -381,19 +380,18 @@ public class TintolmarketServer {
 
 		private String addFunc(String wineID, String image) throws IOException {
 
-			// ReceiveImagesHandler rcvImgHandler = new ReceiveImagesHandler(inStream,
-			// "./src/imgServer/");
-			//
-			// if (wineCatalog.exists(wineID)) {
-			// rcvImgHandler.consumeInput(); // assumindo que a imagem existe
-			// return "This wine already exists.";
-			// }
-			//
-			// try {
-			// rcvImgHandler.receiveImage(image);
-			// } catch (IOException e) {
-			// e.printStackTrace();
-			// }
+			ReceiveImagesHandler rcvImgHandler = new ReceiveImagesHandler(inStream, "./src/imgServer/");
+
+			if (wineCatalog.exists(wineID)) {
+				rcvImgHandler.consumeInput(); // assumindo que a imagem existe
+				return "This wine already exists.";
+			}
+
+			try {
+				rcvImgHandler.receiveImage(image);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 
 			String wineRegist = "";
 			if (wineCatalog.getSize() == 0)
@@ -457,7 +455,8 @@ public class TintolmarketServer {
 
 				blockchain.addTransaction(currentTransaction);
 
-			} catch (ClassNotFoundException | IOException | InvalidKeyException | NoSuchAlgorithmException | SignatureException e) {
+			} catch (ClassNotFoundException | IOException | InvalidKeyException | NoSuchAlgorithmException
+					| SignatureException e) {
 				e.printStackTrace();
 			}
 
@@ -563,7 +562,8 @@ public class TintolmarketServer {
 
 				blockchain.addTransaction(currentTransaction);
 
-			} catch (ClassNotFoundException | IOException | InvalidKeyException | NoSuchAlgorithmException | SignatureException e) {
+			} catch (ClassNotFoundException | IOException | InvalidKeyException | NoSuchAlgorithmException
+					| SignatureException e) {
 				e.printStackTrace();
 			}
 
