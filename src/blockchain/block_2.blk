@@ -1,0 +1,21 @@
+hash: [B@257f8cac
+block_id: 2
+n_trx: 2
+--------
+TRANSACTION: 3
+type: Sell
+wine: v3
+number of units: 123
+price per unit: 123
+owner: 1
+owner signature: [B@6ae50e65
+--------
+TRANSACTION: 4
+type: Sell
+wine: v4
+number of units: 100
+price per unit: 1
+owner: 1
+owner signature: [B@2b9a1daa
+--------
+Server Signature: [B@52276b90

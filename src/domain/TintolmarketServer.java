@@ -53,7 +53,7 @@ public class TintolmarketServer {
 	private static MessageCatalog messageCatalog;
 	private static BlockChain blockchain;
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException, NoSuchAlgorithmException {
 
 		System.out.println("servidor: main");
 
@@ -119,7 +119,7 @@ public class TintolmarketServer {
 	}
 
 	@SuppressWarnings("resource")
-	public void startServer(SSLServerSocket sslServerSocket) throws IOException {
+	public void startServer(SSLServerSocket sslServerSocket) throws IOException, NoSuchAlgorithmException {
 
 		initializeMemory();
 
@@ -135,15 +135,19 @@ public class TintolmarketServer {
 		}
 	}
 
-	protected void initializeMemory() throws IOException {
+	protected void initializeMemory() throws IOException, NoSuchAlgorithmException {
 
 		userCatalog.initializeUserCatalog();
 		initializeSellsCatalog();
 		initializeWineCatalog();
 		initializeMessagesStore();
 
+		
 		blockchain.initializeBlockChain();
 
+//		if (!blockchain.verify()) {
+//			System.exit(0);
+//		}
 		// aqui nao basta apenas isto. tem de ser criado o metodo que carrega a
 		// blockchain para a memoria
 		// este metodo so pode ficar aqui se nao existir blockchain ainda

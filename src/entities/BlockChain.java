@@ -26,7 +26,7 @@ public class BlockChain {
 	private String prefixPath = "./src/blockchain/block_";
 	private String sufixPath = ".blk";
 	private long nextBlockID;
-	private long currentTransactionID;
+	private long nextTransactionID;
 	private static BlockChain INSTANCE;
 	private PrivateKey serverPK;
 	// adicionar assinatura do servidor
@@ -37,7 +37,7 @@ public class BlockChain {
 		// posteriormente estes numeros serao inicializados com os valores obtidos na
 		// verificacao da blockchain
 		this.nextBlockID = 1;
-		this.currentTransactionID = 1;
+		this.nextTransactionID = 1;
 		this.serverPK = serverPK;
 	}
 
@@ -77,7 +77,7 @@ public class BlockChain {
 
 	public synchronized Transaction createTransaction(TransactionType type, String wineID, int unitsNum, int unitPrice,
 			String transactionOwner) throws IOException {
-		return this.currentBlock.createTransaction(currentTransactionID, type, wineID, unitsNum, unitPrice,
+		return this.currentBlock.createTransaction(nextTransactionID, type, wineID, unitsNum, unitPrice,
 				transactionOwner);
 	}
 
@@ -95,11 +95,13 @@ public class BlockChain {
 
 			s.update(content.getBytes());
 			byte[] signedContent = s.sign();
-
+			
+			this.currentBlock.setServerSignature(signedContent);
+			
 			FileWriter blockFile = new FileWriter(this.getCurrentPath(), true);
 			blockFile.write("\n--------\nServer Signature: " + signedContent);
 			blockFile.flush();
-			
+
 			try {
 				MessageDigest digest = MessageDigest.getInstance("SHA-256");
 				byte[] previousHash = digest.digest(signedContent);
@@ -115,7 +117,7 @@ public class BlockChain {
 		blockFile.close();
 
 		this.currentBlock.addTransaction(t);
-		this.currentTransactionID++;
+		this.nextTransactionID++;
 	}
 
 	private String getNewContent(Transaction t, int transactionsPerBlock) throws IOException {
@@ -170,12 +172,11 @@ public class BlockChain {
 				break;
 			}
 
-			// Read the file content
-			firstTime = false;
 			String content = new String(Files.readAllBytes(Paths.get(filePath)));
 			String[] lines = content.split("\n");
 
-			// Parse block information
+			firstTime = false;
+			// Pars
 			byte[] previousHash = parseHash(lines[0]); //verificar este hash com a ultima assinatura
 			long blockID = Long.parseLong(lines[1].split(": ")[1].replaceAll("\\r", ""));
 			int nTrx = Integer.parseInt(lines[2].split(": ")[1].replaceAll("\\r", ""));
@@ -201,8 +202,9 @@ public class BlockChain {
 				Transaction transactionAux = new Transaction(trxID, trxType, wineID, unitsNum, unitPrice, owner);
 				transactionAux.setSignature(signedContent);
 				transactions.add(transactionAux);
-				this.currentTransactionID++;
+				this.nextTransactionID++;
 			}
+
 
 			// Create and add the block to the blockchain
 			Block block = new Block(blockID, previousHash, nTrx, transactions);
@@ -211,7 +213,7 @@ public class BlockChain {
 			if (lines[lines.length - 1].contains("Server Signature")) {
 				byte[] serverSignature = parseSignature(lines[lines.length - 1].split(": ")[1]);
 				block.setServerSignature(serverSignature);
-				
+
 			}
 
 			this.currentBlock = block;
@@ -219,6 +221,7 @@ public class BlockChain {
 			this.nextBlockID++;
 
 		}
+	
 	}
 
 	private static byte[] parseHash(String hashLine) {
@@ -240,9 +243,37 @@ public class BlockChain {
 
 			if (b.getServerSignature() != null)
 				sb.append("\n--------------------------------\nServer Signature: ")
-						.append(b.getServerSignature() + "\n--------------------------------\n\n");
+				.append(b.getServerSignature() + "\n--------------------------------\n\n");
 		}
 
 		return sb.toString();
+	}
+
+	public boolean verify() throws NoSuchAlgorithmException {
+	
+		for (int i = 1; i <= this.nextBlockID - 2; i++) {
+			Block currentBlock = this.getBlockById((long) i);
+			byte[] serverSignature = currentBlock.getServerSignature();
+			
+			MessageDigest digest = MessageDigest.getInstance("SHA-256");
+			
+			Block nextBlock = this.getBlockById((long) (i+1));
+			byte[] previousHash = nextBlock.getPreviousHash();
+			
+			if (!MessageDigest.isEqual(digest.digest(serverSignature), previousHash))
+				return false;
+		}
+		
+		return true;
+		
+	}
+	
+	private Block getBlockById(long id) {
+		for (Block b: this.blockchain) {
+			if (b.getId() == id)
+				return b;
+		}
+		
+		return null;
 	}
 }

@@ -41,6 +41,10 @@ public class Block {
 			int unitPrice, String transactionOwner) {
 		return new Transaction(transactionID, type, wineID, unitsNum, unitPrice, transactionOwner);
 	}
+	
+	public byte[] getPreviousHash() {
+		return this.previousHash;
+	}
 
 	public long getId() {
 		return this.block_id;
