@@ -1,1 +1,5 @@
-vinhoTinto;vinhoTinto.png;0;0
+v;vinhoTinto.png;8;2
+v2;vinhoTinto.png;0;0
+v3;vinhoTinto.png;0;0
+v4;vinhoTinto.png;0;0
+v5;vinhoTinto.png;0;0

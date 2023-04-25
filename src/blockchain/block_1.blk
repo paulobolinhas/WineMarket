@@ -1,11 +1,21 @@
 hash: 00000000
 block_id: 1
-n_trx: 1
+n_trx: 2
 --------
 TRANSACTION: 1
 type: Sell
-wine: vinhoTinto
-number of units: 10
-price per unit: 100
+wine: v
+number of units: 1
+price per unit: 1
 owner: 1
-owner signature: [B@294529f5
+owner signature: [B@65a47182
+--------
+TRANSACTION: 2
+type: Sell
+wine: v2
+number of units: 2
+price per unit: 2
+owner: 1
+owner signature: [B@52defdd1
+--------
+Server Signature: [B@15e777

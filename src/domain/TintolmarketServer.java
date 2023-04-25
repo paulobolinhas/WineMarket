@@ -119,7 +119,7 @@ public class TintolmarketServer {
 	}
 
 	@SuppressWarnings("resource")
-	public void startServer(SSLServerSocket sslServerSocket) {
+	public void startServer(SSLServerSocket sslServerSocket) throws IOException {
 
 		initializeMemory();
 
@@ -135,7 +135,7 @@ public class TintolmarketServer {
 		}
 	}
 
-	protected void initializeMemory() {
+	protected void initializeMemory() throws IOException {
 
 		userCatalog.initializeUserCatalog();
 		initializeSellsCatalog();
@@ -143,14 +143,16 @@ public class TintolmarketServer {
 		initializeMessagesStore();
 
 		blockchain.initializeBlockChain();
+
 		// aqui nao basta apenas isto. tem de ser criado o metodo que carrega a
 		// blockchain para a memoria
 		// este metodo so pode ficar aqui se nao existir blockchain ainda
-		try {
-			blockchain.createBlock(null);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+
+		// try {
+		// blockchain.createBlock(null);
+		// } catch (IOException e) {
+		// e.printStackTrace();
+		// }
 	}
 
 	private synchronized void initializeMessagesStore() {
@@ -367,6 +369,8 @@ public class TintolmarketServer {
 						System.out.println("Client Disconnected");
 						break;
 
+					} else if (userActionSplited[0].equals("list") || userActionSplited[0].equals("l")) {
+						outStream.writeObject("\n" + blockchain.toString());
 					} else {
 						outStream.writeObject("Invalid action.\n");
 						continue;
@@ -934,7 +938,7 @@ public class TintolmarketServer {
 		private String getMenu() {
 			return "\nActions:\nadd <wine> <image>\n" + "sell <wine> <value> <quantity>\n" + "view <wine>\n"
 					+ "buy <wine> <seller> <quantity>\n" + "wallet\n" + "classify <wine> <stars>\n"
-					+ "talk <user> <message>\n" + "read\n" + "exit\n";
+					+ "talk <user> <message>\n" + "read\n" + "list\n" + "exit\n";
 		}
 
 	}

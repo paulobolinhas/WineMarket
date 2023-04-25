@@ -1,0 +1,11 @@
+hash: [B@767d10d
+block_id: 4
+n_trx: 1
+--------
+TRANSACTION: 7
+type: Buy
+wine: v2
+number of units: 2
+price per unit: 2
+owner: 2
+owner signature: [B@103e7869
