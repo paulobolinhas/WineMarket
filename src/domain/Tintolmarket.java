@@ -17,6 +17,7 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
+import java.util.Base64;
 import java.util.Scanner;
 
 import javax.crypto.BadPaddingException;
@@ -28,6 +29,7 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
 import domain.entities.ClientAuthentication;
+import domain.entities.Mensagem;
 import domain.handlers.ReceiveImagesHandler;
 import domain.handlers.SendImagesHandler;
 
@@ -133,11 +135,14 @@ public class Tintolmarket {
 					System.out.println("Choose action:\n");
 
 					userAction = clientInterface.nextLine();
-					String[] userActionSplited = userAction.split(" ");
+					String[] userActionSplited = userAction.split(" "); //se a msg tiver mais do que uma palavra funciona?
 
 					if (userActionSplited[0].equals("talk") || userActionSplited[0].equals("t")) {
 
-						String toEncrypt = userActionSplited[2];
+						String toEncrypt = "";
+						for (int i = 2; i < userActionSplited.length; i++) {
+							toEncrypt += userActionSplited[i] + " ";
+						}
 
 						KeyStore trustStore = KeyStore.getInstance("JKS");
 						trustStore.load(new FileInputStream("./src/keys/" + trustStoreAlias),
@@ -151,18 +156,15 @@ public class Tintolmarket {
 
 						PublicKey pk = c.getPublicKey();
 
-						// PublicKey pk = trustStore.getCertificate("client" + userActionSplited[1] +
-						// "KeyRSApub.cer")
-						// .getPublicKey();
-
 						Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
 
 						cipher.init(Cipher.ENCRYPT_MODE, pk);
 
 						// Encrypt the toEncrypt string
-						byte[] encryptedData = cipher.doFinal(toEncrypt.getBytes());
+						String toEncryptBase64 = Base64.getEncoder().encodeToString(toEncrypt.getBytes());
+						byte[] encryptedData = cipher.doFinal(toEncryptBase64.getBytes());
 
-						userAction = userActionSplited[0] + " " + userActionSplited[1] + " " + encryptedData;
+						userAction = userActionSplited[0] + " " + userActionSplited[1] + " " + Base64.getEncoder().encodeToString(encryptedData);
 					}
 
 					outStream.writeObject(userAction);
@@ -196,30 +198,32 @@ public class Tintolmarket {
 						}
 					}
 
-					String result = null;
-
+					String result = (String) inStream.readObject();
+					
+					System.out.println("RESULT " + result);
 					if (userActionSplited[0].equals("read") || userActionSplited[0].equals("r")) {
-
-						byte[] resultInBytes = (byte[]) inStream.readObject();
-						System.out.println(result);
-
-						PrivateKey pk = clientAuth.loadKSAndPK(keyStoreAlias, passKeyStoreString);
-
+						
+						Scanner sc = new Scanner(result);
+						
 						Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-						cipher.init(Cipher.DECRYPT_MODE, pk);
-
-						byte[] decryptedData = cipher.doFinal(resultInBytes);
-
-						// The decryptedData variable now contains the decrypted string bytes
-						String decryptedString = new String(decryptedData);
-
-						System.out.println(decryptedString);
-
-					} else {
-
-						result = (String) inStream.readObject();
-						System.out.println(result);
+						cipher.init(Cipher.DECRYPT_MODE, clientAuth.getPrivateKey());
+						StringBuilder sb = new StringBuilder();
+						sb.append("Mensagens recebidas: \n");
+						
+						while(sc.hasNextLine()) {
+							String currentLine = sc.nextLine();
+							String[] currentLineSplitted = currentLine.split(":");
+							System.out.println("CURRENT LINE " + currentLine);
+							String msgEncrypted = currentLineSplitted[1];
+							String msgDecrypted = decryptMessage(msgEncrypted, cipher);
+							sb.append(" Remetente: " + currentLineSplitted[0] + ";\n Mensagem: " + msgDecrypted + " \n\n");
+						}	
+						
+						result = sb.toString();
+						sc.close();
 					}
+					
+					System.out.println(result);
 
 					if ((userActionSplited[0].equals("view") || userActionSplited[0].equals("v"))
 							&& !result.equals("This Wine doesnt exist")) {
@@ -243,7 +247,7 @@ public class Tintolmarket {
 
 			} catch (ClassNotFoundException | InvalidKeyException | SignatureException | NoSuchAlgorithmException
 					| KeyStoreException | CertificateException | IllegalBlockSizeException | BadPaddingException
-					| NoSuchPaddingException | UnrecoverableKeyException e) {
+					| NoSuchPaddingException e) {
 				e.printStackTrace();
 			}
 
@@ -255,6 +259,12 @@ public class Tintolmarket {
 
 			System.out.println("I/O error: " + ex.getMessage());
 		}
+	}
+	
+	private static String decryptMessage(String msgEncrypted, Cipher cipher) throws IllegalBlockSizeException, BadPaddingException {
+		byte[] encryptedData = Base64.getDecoder().decode(msgEncrypted);
+	    byte[] decryptedData = cipher.doFinal(encryptedData);
+	    return new String(decryptedData);
 	}
 
 	private static byte[] longToBytes(long x) {

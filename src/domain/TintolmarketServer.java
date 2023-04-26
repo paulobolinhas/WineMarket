@@ -717,10 +717,9 @@ public class TintolmarketServer {
 
 			if (messageCatalog.existsMessagesFor(clientID)) {
 				ArrayList<Mensagem> messagesForClient = messageCatalog.getMessagesForClient(clientID);
-				sb.append("Mensagens recebidas: \n");
 
 				for (Mensagem m : messagesForClient) {
-					sb.append(" Remetente: " + m.getSender() + ";\n Mensagem: " + m.getMessage() + "\n\n");
+					sb.append(m.getSender() + ":" + m.getMessage() + "\n");
 					messageCatalog.remove(m);
 				}
 

@@ -20,6 +20,7 @@ public class ClientAuthentication {
 	private ObjectInputStream inStream;
 	private ObjectOutputStream outStream;
 	private KeyStore clientKeyStore;
+	private PrivateKey clientPrivateKey;
 	
 	public ClientAuthentication(ObjectInputStream inStream, ObjectOutputStream outStream) {
 		this.inStream = inStream;
@@ -33,11 +34,15 @@ public class ClientAuthentication {
 	public PrivateKey loadKSAndPK(String keyStoreAlias, String passKeyStoreString) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException, UnrecoverableKeyException {
 		this.clientKeyStore = KeyStore.getInstance("JKS");
 		this.clientKeyStore.load(new FileInputStream("src//keys//"+keyStoreAlias), passKeyStoreString.toCharArray());
-		return (PrivateKey)this.clientKeyStore.getKey(keyStoreAlias, passKeyStoreString.toCharArray());
+		return this.clientPrivateKey = (PrivateKey)this.clientKeyStore.getKey(keyStoreAlias, passKeyStoreString.toCharArray());
+	}
+	
+	public PrivateKey getPrivateKey() {
+		return this.clientPrivateKey;
 	}
 	
 	public void SendSignature(Long dataToSign, PrivateKey privateKey) throws InvalidKeyException, SignatureException, IOException, NoSuchAlgorithmException {
-		Signature signature = Signature.getInstance("SHA256withRSA");;
+		Signature signature = Signature.getInstance("SHA256withRSA");
 		signature.initSign(privateKey);
 		signature.update(dataToSign.toString().getBytes());
 
@@ -46,7 +51,7 @@ public class ClientAuthentication {
 	}
 	
 	public void SendSignature(String dataToSign, PrivateKey privateKey) throws InvalidKeyException, SignatureException, IOException, NoSuchAlgorithmException {
-		Signature signature = Signature.getInstance("SHA256withRSA");;
+		Signature signature = Signature.getInstance("SHA256withRSA");
 		signature.initSign(privateKey);
 		signature.update(dataToSign.getBytes());
 
