@@ -1,4 +1,4 @@
-package entities;
+package domain.entities;
 
 import javax.crypto.*;
 import javax.crypto.spec.*;

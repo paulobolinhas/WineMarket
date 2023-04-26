@@ -1,4 +1,4 @@
-package entities;
+package domain.entities;
 
 import java.math.BigInteger;
 import java.util.ArrayList;

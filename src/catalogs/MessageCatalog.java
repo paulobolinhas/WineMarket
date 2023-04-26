@@ -2,7 +2,7 @@ package catalogs;
 
 import java.util.ArrayList;
 
-import domain.Mensagem;
+import domain.entities.Mensagem;
 
 public class MessageCatalog {
 	private static MessageCatalog instance;

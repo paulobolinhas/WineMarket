@@ -1,7 +1,8 @@
 package catalogs;
 
-import domain.Wine;
 import java.util.ArrayList;
+
+import domain.entities.Wine;
 
 public class WineCatalog {
 	

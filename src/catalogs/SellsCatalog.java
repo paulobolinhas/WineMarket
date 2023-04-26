@@ -2,7 +2,7 @@ package catalogs;
 
 import java.util.ArrayList;
 
-import domain.Sell;
+import domain.entities.Sell;
 
 public class SellsCatalog {
 
