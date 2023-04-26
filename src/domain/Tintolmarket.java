@@ -1,5 +1,6 @@
 package domain;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -15,9 +16,13 @@ import java.security.SignatureException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.util.Scanner;
-import java.io.FileInputStream;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
@@ -121,23 +126,37 @@ public class Tintolmarket {
 
 					userAction = clientInterface.nextLine();
 					String[] userActionSplited = userAction.split(" ");
-					
-					
-					
+
 					if (userActionSplited[0].equals("talk") || userActionSplited[0].equals("t")) {
-						
+
 						KeyStore trustStore = KeyStore.getInstance("JKS");
-						trustStore.load(new FileInputStream(".src/keys/"+trustStoreAlias), trustStoreAlias.toCharArray());
-						
-						PublicKey pk = trustStore.getCertificate("client"+userActionSplited[1]+"KeyRSApub.cer").getPublicKey();
-						
-//						userAction = //talk user mensagemEncriptada
+						trustStore.load(new FileInputStream("./src/keys/" + trustStoreAlias),
+								trustStoreAlias.toCharArray());
+
+						String path = "src/certificates/" + "client" + userActionSplited[1] + "KeyRSApub.cer";
+						FileInputStream is = new FileInputStream(path);
+						CertificateFactory cf = CertificateFactory.getInstance("X.509");
+						Certificate c = cf.generateCertificate(is);
+						is.close();
+
+						PublicKey pk = c.getPublicKey();
+
+						String toEncrypt = userActionSplited[2];
+//						PublicKey pk = trustStore.getCertificate("client" + userActionSplited[1] + "KeyRSApub.cer")
+//								.getPublicKey();
+
+						Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+
+						cipher.init(Cipher.ENCRYPT_MODE, pk);
+
+						// Encrypt the toEncrypt string
+						byte[] encryptedData = cipher.doFinal(toEncrypt.getBytes());
+
+						userAction = userActionSplited[0] + " " + userActionSplited[1] + " " + encryptedData;
 					}
-					
-					
+
 					outStream.writeObject(userAction);
 
-					
 					if (userActionSplited[0].equals("add") || userActionSplited[0].equals("a")) {
 						SendImagesHandler sendImgHandler = new SendImagesHandler(outStream, "./src/imgClient/");
 						try {
@@ -166,9 +185,31 @@ public class Tintolmarket {
 							clientAuth.SendSignature(dataToSign, privateKey); // envia data e data assinado
 						}
 					}
-					
-					String result = (String) inStream.readObject();
-					System.out.println(result);
+
+					String result = null;
+
+					if (userActionSplited[0].equals("read") || userActionSplited[0].equals("r")) {
+
+						byte[] resultInBytes = (byte[]) inStream.readObject();
+						System.out.println(result);
+
+						PrivateKey pk = clientAuth.loadKSAndPK(keyStoreAlias, passKeyStoreString);
+
+						Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+						cipher.init(Cipher.DECRYPT_MODE, pk);
+
+						byte[] decryptedData = cipher.doFinal(resultInBytes);
+
+						// The decryptedData variable now contains the decrypted string bytes
+						String decryptedString = new String(decryptedData);
+
+						System.out.println(decryptedString);
+
+					} else {
+
+						result = (String) inStream.readObject();
+						System.out.println(result);
+					}
 
 					if ((userActionSplited[0].equals("view") || userActionSplited[0].equals("v"))
 							&& !result.equals("This Wine doesnt exist")) {
@@ -190,7 +231,9 @@ public class Tintolmarket {
 				sslSocket.close();
 				System.exit(0);
 
-			} catch (ClassNotFoundException | InvalidKeyException | SignatureException | NoSuchAlgorithmException | KeyStoreException | CertificateException e) {
+			} catch (ClassNotFoundException | InvalidKeyException | SignatureException | NoSuchAlgorithmException
+					| KeyStoreException | CertificateException | IllegalBlockSizeException | BadPaddingException
+					| NoSuchPaddingException | UnrecoverableKeyException e) {
 				e.printStackTrace();
 			}
 
