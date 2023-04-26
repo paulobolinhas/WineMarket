@@ -156,19 +156,19 @@ public class Tintolmarket {
 
 						PublicKey pk = c.getPublicKey();
 
-						Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-
+						Cipher cipher = Cipher.getInstance("RSA");
 						cipher.init(Cipher.ENCRYPT_MODE, pk);
 
 						// Encrypt the toEncrypt string
-						String toEncryptBase64 = Base64.getEncoder().encodeToString(toEncrypt.getBytes());
-						byte[] encryptedData = cipher.doFinal(toEncryptBase64.getBytes());
+						byte[] encryptedData = cipher.doFinal(toEncrypt.getBytes());
 
-						userAction = userActionSplited[0] + " " + userActionSplited[1] + " " + Base64.getEncoder().encodeToString(encryptedData);
+						userAction = userActionSplited[0] + " " + userActionSplited[1];
+						outStream.writeObject(userAction);
+						outStream.writeObject(Base64.getEncoder().encodeToString(encryptedData));
+					} else {
+
+						outStream.writeObject(userAction);
 					}
-
-					outStream.writeObject(userAction);
-
 					if (userActionSplited[0].equals("add") || userActionSplited[0].equals("a")) {
 						SendImagesHandler sendImgHandler = new SendImagesHandler(outStream, "./src/imgClient/");
 						try {
@@ -205,7 +205,7 @@ public class Tintolmarket {
 						
 						Scanner sc = new Scanner(result);
 						
-						Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+						Cipher cipher = Cipher.getInstance("RSA");
 						cipher.init(Cipher.DECRYPT_MODE, clientAuth.getPrivateKey());
 						StringBuilder sb = new StringBuilder();
 						sb.append("Mensagens recebidas: \n");
@@ -262,9 +262,8 @@ public class Tintolmarket {
 	}
 	
 	private static String decryptMessage(String msgEncrypted, Cipher cipher) throws IllegalBlockSizeException, BadPaddingException {
-		byte[] encryptedData = Base64.getDecoder().decode(msgEncrypted);
-	    byte[] decryptedData = cipher.doFinal(encryptedData);
-	    return new String(decryptedData);
+		byte[] decryptedData = cipher.doFinal(msgEncrypted.getBytes());
+		return new String(decryptedData);
 	}
 
 	private static byte[] longToBytes(long x) {

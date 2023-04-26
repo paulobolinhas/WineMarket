@@ -18,11 +18,19 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.SignatureException;
+import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Scanner;
+import java.util.Map;
+import java.util.HashMap;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.net.ServerSocketFactory;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
@@ -303,12 +311,12 @@ public class TintolmarketServer {
 
 				socket.close();
 
-			} catch (IOException e) {
+			} catch (IOException | ClassNotFoundException e) {
 				e.printStackTrace();
 			}
 		}
 
-		private void interactWUser(String clientID) {
+		private void interactWUser(String clientID) throws ClassNotFoundException {
 
 			String menu = getMenu();
 			String userAction = "";
@@ -687,19 +695,21 @@ public class TintolmarketServer {
 		}
 
 		private String talkFunc(String usersFilename, String messagesFilename, String clientIDSender, String message,
-				String clientIDDest) throws IOException {
+				String clientIDDest) throws IOException, ClassNotFoundException {
 
+			String dataEncrypted = (String) inStream.readObject();
+			
 			if (userCatalog.exists(clientIDDest)) {
 
 				OutputStream addMessage = new FileOutputStream(messagesFilename, true);
 
 				String messageRegist;
 				if (messageCatalog.getSize() == 0)
-					messageRegist = (clientIDSender + ";" + clientIDDest + ";" + message);
+					messageRegist = (clientIDSender + ";" + clientIDDest + ";" + dataEncrypted);
 				else
-					messageRegist = ("\n" + clientIDSender + ";" + clientIDDest + ";" + message);
+					messageRegist = ("\n" + clientIDSender + ";" + clientIDDest + ";" +  dataEncrypted);
 
-				messageCatalog.add(new Mensagem(clientIDSender, clientIDDest, message));
+				messageCatalog.add(new Mensagem(clientIDSender, clientIDDest, dataEncrypted));
 				synchronized (addMessage) {
 					addMessage.write(messageRegist.getBytes(), 0, messageRegist.length());
 					addMessage.close();
@@ -714,14 +724,34 @@ public class TintolmarketServer {
 		private synchronized String readFunc(String filename, String clientID) {
 
 			StringBuilder sb = new StringBuilder();
-
+//			Map<String, byte[]> messages = new HashMap<>();
 			if (messageCatalog.existsMessagesFor(clientID)) {
 				ArrayList<Mensagem> messagesForClient = messageCatalog.getMessagesForClient(clientID);
-
+				
+				
+				byte[] decodedMessage = null;
 				for (Mensagem m : messagesForClient) {
-					sb.append(m.getSender() + ":" + m.getMessage() + "\n");
+//					messages.put(m.getSender(), Base64.getDecoder().decode(m.getMessage()));
+					decodedMessage = Base64.getDecoder().decode(m.getMessage());
+					sb.append(m.getSender() + ":" + Base64.getDecoder().decode(m.getMessage()) + "\n");
 					messageCatalog.remove(m);
 				}
+				
+//				KeyStore ksTemp;
+//				PrivateKey pkTemp;
+//				try {
+//					ksTemp = KeyStore.getInstance("JKS");
+//					ksTemp.load(new FileInputStream("./src/keys/client1Keys"), "client1Keys".toCharArray());
+//					pkTemp = (PrivateKey)ksTemp.getKey("client1Keys", "client1Keys".toCharArray());
+//					Cipher cipher = Cipher.getInstance("RSA");
+//					cipher.init(Cipher.DECRYPT_MODE, pkTemp);
+//					byte[] decryptedData = cipher.doFinal(decodedMessage);
+//					System.out.println("DECRYPTEDDDD " + new String(decryptedData));
+//					
+//				} catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException | UnrecoverableKeyException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException e) {
+//					e.printStackTrace();
+//				}
+				
 
 				File messagesFile = new File(filename);
 
