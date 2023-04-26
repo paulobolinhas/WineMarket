@@ -8,14 +8,14 @@ wine: v
 number of units: 100
 price per unit: 1
 owner: 1
-owner signature: [B@65a96c16
+owner signature: [B@39a41a39
 --------
 TRANSACTION: 2
 type: Sell
 wine: v2
-number of units: 13
-price per unit: 2
+number of units: 199
+price per unit: 1
 owner: 1
-owner signature: [B@3c07dcc4
+owner signature: [B@2d06ba6d
 --------
-Server Signature: [B@72d18f18
+Server Signature: [B@515d6117

@@ -2,6 +2,7 @@ package entities;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -11,12 +12,19 @@ import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import catalogs.UserCatalog;
 import enums.TransactionType;
 
 public class BlockChain {
@@ -230,7 +238,7 @@ public class BlockChain {
 	}
 
 	private static byte[] parseSignature(String signatureString) {
-		return signatureString.getBytes();
+		return signatureString.getBytes() ;
 	}
 
 	@Override
@@ -249,10 +257,30 @@ public class BlockChain {
 		return sb.toString();
 	}
 
-	public boolean verify() throws NoSuchAlgorithmException {
+	public boolean verify(UserCatalog uc) throws NoSuchAlgorithmException, CertificateException, IOException, InvalidKeyException, SignatureException {
 	
 		for (int i = 1; i <= this.nextBlockID - 2; i++) {
+			
 			Block currentBlock = this.getBlockById((long) i);
+			Signature s = Signature.getInstance("SHA256withRSA");
+			//Verificar assinaturas transacoes
+			for (Transaction currentTransaction: currentBlock.getTransactions()) {
+				
+				String contentNotSigned = currentTransaction.getDataToSign();
+				String transactionOwner = currentTransaction.getTransactionOwner();
+				byte[] contentSigned = currentTransaction.getSignedContent();
+				
+				//aqui tem q se obter atraves do catalogo de utilizadores
+				Certificate c = this.getCertificate(uc.getCertificadoByID(transactionOwner));
+				PublicKey pk = c.getPublicKey();
+				s.initVerify(pk);
+				s.update(contentNotSigned.getBytes());
+				if (!s.verify(contentSigned)) {
+					System.out.println("Assinatura da transacao invalida");
+					return false;
+				}
+			}
+			
 			byte[] serverSignature = currentBlock.getServerSignature();
 			
 			MessageDigest digest = MessageDigest.getInstance("SHA-256");
@@ -263,9 +291,18 @@ public class BlockChain {
 			if (!MessageDigest.isEqual(digest.digest(serverSignature), previousHash))
 				return false;
 		}
-		
+//		
 		return true;
 		
+	}
+	
+	private Certificate getCertificate(String certificateName) throws CertificateException, IOException {
+		String path = "src/certificates/"+certificateName;
+		FileInputStream is = new FileInputStream(path);
+		CertificateFactory cf = CertificateFactory.getInstance("X.509");
+		Certificate c = cf.generateCertificate(is);
+		is.close();
+		return c;
 	}
 	
 	private Block getBlockById(long id) {

@@ -47,7 +47,6 @@ public class AuthenticationValidator {
 	
 	public Certificate getCertificate(String certificateName) throws KeyStoreException, CertificateException, IOException, ClassNotFoundException {
 		String path = "src/certificates/"+certificateName;
-		System.out.println(path);
 		FileInputStream is = new FileInputStream(path);
 		CertificateFactory cf = CertificateFactory.getInstance("X.509");
 		Certificate c = cf.generateCertificate(is);

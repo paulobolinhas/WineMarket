@@ -48,7 +48,7 @@ public class ClientAuthentication {
 	public void SendSignature(String dataToSign, PrivateKey privateKey) throws InvalidKeyException, SignatureException, IOException, NoSuchAlgorithmException {
 		Signature signature = Signature.getInstance("SHA256withRSA");;
 		signature.initSign(privateKey);
-		signature.update(dataToSign.toString().getBytes());
+		signature.update(dataToSign.getBytes());
 
 		this.outStream.writeObject(dataToSign);
 		this.outStream.writeObject(signature.sign());

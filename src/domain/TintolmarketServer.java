@@ -135,28 +135,22 @@ public class TintolmarketServer {
 		}
 	}
 
-	protected void initializeMemory() throws IOException, NoSuchAlgorithmException {
+	protected void initializeMemory() throws IOException {
 
 		userCatalog.initializeUserCatalog();
 		initializeSellsCatalog();
 		initializeWineCatalog();
 		initializeMessagesStore();
-
 		
-		blockchain.initializeBlockChain();
-
-//		if (!blockchain.verify()) {
-//			System.exit(0);
+//		try {
+			blockchain.initializeBlockChain();
+//			if (!blockchain.verify(userCatalog)) {
+//				System.out.println("Blockchain corrompida");
+//				System.exit(0);
+//			}
+//		} catch (NoSuchAlgorithmException | CertificateException | IOException | InvalidKeyException | SignatureException e) {
+//			e.printStackTrace();
 //		}
-		// aqui nao basta apenas isto. tem de ser criado o metodo que carrega a
-		// blockchain para a memoria
-		// este metodo so pode ficar aqui se nao existir blockchain ainda
-
-		// try {
-		// blockchain.createBlock(null);
-		// } catch (IOException e) {
-		// e.printStackTrace();
-		// }
 	}
 
 	private synchronized void initializeMessagesStore() {
@@ -262,10 +256,8 @@ public class TintolmarketServer {
 				try {
 
 					Long nonceFromClient = authValidator.receiveNonce();
-					System.out.println("Nonce recebido do cliente: " + nonceFromClient);
 
 					byte[] signedContent = authValidator.receiveSignature();
-					System.out.println("Conteudo assinado recebido do cliente");
 
 					Certificate certificate = null;
 
@@ -459,14 +451,13 @@ public class TintolmarketServer {
 				String dataToVerify = (String) inStream.readObject();
 				byte[] signedContent = (byte[]) inStream.readObject();
 
-				currentTransaction.setSignature(signedContent);
-
 				//verificar assinatura
 				boolean isSignatureValid = authValidator.verifySignature(dataToVerify, signedContent);
 				
 				if (!isSignatureValid)
 					return "Content signed incorrect, SELL operation canceled";
 				
+				currentTransaction.setSignature(signedContent);
 				blockchain.addTransaction(currentTransaction);
 
 			} catch (ClassNotFoundException | IOException | InvalidKeyException | NoSuchAlgorithmException
@@ -571,7 +562,7 @@ public class TintolmarketServer {
 
 				String dataToVerify = (String) inStream.readObject();
 				byte[] signedContent = (byte[]) inStream.readObject();
-
+				System.out.println("DATA SIGNED IN BYTES " + signedContent);
 				currentTransaction.setSignature(signedContent);
 
 				//verificar assinatura

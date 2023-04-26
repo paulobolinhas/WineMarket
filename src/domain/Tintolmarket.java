@@ -6,14 +6,17 @@ import java.io.ObjectOutputStream;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.security.InvalidKeyException;
+import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.SignatureException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.util.Scanner;
+import java.io.FileInputStream;
 
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocket;
@@ -35,13 +38,13 @@ public class Tintolmarket {
 		if (ipport.length == 2)
 			port = Integer.parseInt(ipport[1]);
 
-		String trustStore = args[1];
+		String trustStoreAlias = args[1];
 		String keyStoreAlias = args[2];
 		String passKeyStoreString = args[3];
 		String userID = args[4];
 
-		System.setProperty("javax.net.ssl.trustStore", "src//keys//" + trustStore);
-		System.setProperty("javax.net.ssl.trustStorePassword", trustStore);
+		System.setProperty("javax.net.ssl.trustStore", "src//keys//" + trustStoreAlias);
+		System.setProperty("javax.net.ssl.trustStorePassword", trustStoreAlias);
 		SocketFactory sf = SSLSocketFactory.getDefault();
 
 		try (SSLSocket sslSocket = (SSLSocket) sf.createSocket(hostname, port)) {
@@ -117,15 +120,26 @@ public class Tintolmarket {
 					System.out.println("Choose action:\n");
 
 					userAction = clientInterface.nextLine();
-
+					String[] userActionSplited = userAction.split(" ");
+					
+					
+					
+					if (userActionSplited[0].equals("talk") || userActionSplited[0].equals("t")) {
+						
+						KeyStore trustStore = KeyStore.getInstance("JKS");
+						trustStore.load(new FileInputStream(".src/keys/"+trustStoreAlias), trustStoreAlias.toCharArray());
+						
+						PublicKey pk = trustStore.getCertificate("client"+userActionSplited[1]+"KeyRSApub.cer").getPublicKey();
+						
+//						userAction = //talk user mensagemEncriptada
+					}
+					
+					
 					outStream.writeObject(userAction);
 
-					String[] userActionSplited = userAction.split(" ");
-
+					
 					if (userActionSplited[0].equals("add") || userActionSplited[0].equals("a")) {
-
 						SendImagesHandler sendImgHandler = new SendImagesHandler(outStream, "./src/imgClient/");
-
 						try {
 							sendImgHandler.sendImage(userActionSplited[2]);
 						} catch (IOException e) {
@@ -151,9 +165,8 @@ public class Tintolmarket {
 
 							clientAuth.SendSignature(dataToSign, privateKey); // envia data e data assinado
 						}
-
 					}
-
+					
 					String result = (String) inStream.readObject();
 					System.out.println(result);
 
@@ -177,7 +190,7 @@ public class Tintolmarket {
 				sslSocket.close();
 				System.exit(0);
 
-			} catch (ClassNotFoundException | InvalidKeyException | SignatureException | NoSuchAlgorithmException e) {
+			} catch (ClassNotFoundException | InvalidKeyException | SignatureException | NoSuchAlgorithmException | KeyStoreException | CertificateException e) {
 				e.printStackTrace();
 			}
 

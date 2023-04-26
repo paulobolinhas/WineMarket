@@ -29,6 +29,10 @@ public class Transaction {
 	public int getUnitPrice() {
 		return this.unitPrice;
 	}
+	
+	public byte[] getSignedContent() {
+		return this.signedContent;
+	}
 
 	public String getWineID() {
 		return this.wineID;
