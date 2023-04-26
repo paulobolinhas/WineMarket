@@ -1,4 +1,4 @@
-package entities;
+package domain.entities;
 
 import java.io.File;
 import java.io.FileInputStream;

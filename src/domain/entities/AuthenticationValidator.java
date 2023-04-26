@@ -1,4 +1,4 @@
-package entities;
+package domain.entities;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -13,8 +13,6 @@ import java.security.SignatureException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
-
-import domain.Nonce;
 
 public class AuthenticationValidator {
 

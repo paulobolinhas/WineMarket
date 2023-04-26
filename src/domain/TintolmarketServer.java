@@ -31,11 +31,17 @@ import catalogs.MessageCatalog;
 import catalogs.SellsCatalog;
 import catalogs.UserCatalog;
 import catalogs.WineCatalog;
-import entities.AuthenticationValidator;
-import entities.BlockChain;
-import entities.FileEncryptorDecryptor;
-import entities.IntegrationChecker;
-import entities.Transaction;
+import domain.entities.AuthenticationValidator;
+import domain.entities.BlockChain;
+import domain.entities.FileEncryptorDecryptor;
+import domain.entities.IntegrationChecker;
+import domain.entities.Mensagem;
+import domain.entities.Sell;
+import domain.entities.Transaction;
+import domain.entities.User;
+import domain.entities.Wine;
+import domain.handlers.ReceiveImagesHandler;
+import domain.handlers.SendImagesHandler;
 import enums.TransactionType;
 
 public class TintolmarketServer {

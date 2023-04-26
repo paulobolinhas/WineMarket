@@ -22,10 +22,16 @@ import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
-import entities.ClientAuthentication;
+import domain.entities.ClientAuthentication;
+import domain.handlers.ClientAuthenticationHandler;
+import domain.handlers.ReceiveImagesHandler;
+import domain.handlers.SendImagesHandler;
 
 public class Tintolmarket {
 
+//	private ClientAuthenticationHandler clientAuthHandler;
+	
+	
 	public static void main(String[] args) {
 
 		// Tintolmarket <serverAddress> <truststore> <keystore> <password-keystore>
@@ -51,6 +57,9 @@ public class Tintolmarket {
 
 			ObjectOutputStream outStream = new ObjectOutputStream(sslSocket.getOutputStream());
 			ObjectInputStream inStream = new ObjectInputStream(sslSocket.getInputStream());
+			
+//			clientAuthHandler = ClientAuthenticationHandler.getInstance(outStream, inStream);
+			
 			Scanner clientInterface = new Scanner(System.in);
 
 			outStream.writeObject(userID); // userID = pedido de autenticacao
@@ -126,6 +135,8 @@ public class Tintolmarket {
 					
 					if (userActionSplited[0].equals("talk") || userActionSplited[0].equals("t")) {
 						
+						String toEncrypt = userActionSplited[2];
+						
 						KeyStore trustStore = KeyStore.getInstance("JKS");
 						trustStore.load(new FileInputStream(".src/keys/"+trustStoreAlias), trustStoreAlias.toCharArray());
 						
@@ -166,6 +177,9 @@ public class Tintolmarket {
 							clientAuth.SendSignature(dataToSign, privateKey); // envia data e data assinado
 						}
 					}
+					
+			
+					
 					
 					String result = (String) inStream.readObject();
 					System.out.println(result);

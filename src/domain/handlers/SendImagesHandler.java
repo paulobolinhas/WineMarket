@@ -1,4 +1,4 @@
-package domain;
+package domain.handlers;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
