@@ -4,18 +4,18 @@ n_trx: 2
 --------
 TRANSACTION: 1
 type: Sell
-wine: v
-number of units: 100
-price per unit: 1
+wine: w
+number of units: 1
+price per unit: 3
 owner: 1
-owner signature: [B@39a41a39
+owner signature: [B@6e01b636
 --------
 TRANSACTION: 2
 type: Sell
-wine: v2
-number of units: 199
-price per unit: 1
+wine: w1
+number of units: 2
+price per unit: 4
 owner: 1
-owner signature: [B@2d06ba6d
+owner signature: [B@1ac0e348
 --------
-Server Signature: [B@515d6117
+Server Signature: [B@1ac0e348

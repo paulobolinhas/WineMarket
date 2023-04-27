@@ -18,19 +18,11 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.SignatureException;
-import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.Scanner;
-import java.util.Map;
-import java.util.HashMap;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 import javax.net.ServerSocketFactory;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
@@ -155,9 +147,9 @@ public class TintolmarketServer {
 		initializeSellsCatalog();
 		initializeWineCatalog();
 		initializeMessagesStore();
-		
+
 //		try {
-			blockchain.initializeBlockChain();
+		blockchain.initializeBlockChain();
 //			if (!blockchain.verify(userCatalog)) {
 //				System.out.println("Blockchain corrompida");
 //				System.exit(0);
@@ -232,7 +224,7 @@ public class TintolmarketServer {
 		private ObjectOutputStream outStream;
 		private ObjectInputStream inStream;
 		private AuthenticationValidator authValidator;
-		
+
 		ClientHandler(Socket sslServerSocket) {
 			socket = sslServerSocket;
 
@@ -451,7 +443,7 @@ public class TintolmarketServer {
 
 				Transaction currentTransaction = blockchain.createTransaction(TransactionType.SELL, wineID, quantity,
 						value, seller);
-				
+
 				outStream.writeObject("Do you want to confirm the SELL operation? (yes or no)");
 
 				String confirmation = (String) inStream.readObject(); // Receber confirmacao
@@ -465,12 +457,12 @@ public class TintolmarketServer {
 				String dataToVerify = (String) inStream.readObject();
 				byte[] signedContent = (byte[]) inStream.readObject();
 
-				//verificar assinatura
+				// verificar assinatura
 				boolean isSignatureValid = authValidator.verifySignature(dataToVerify, signedContent);
-				
+
 				if (!isSignatureValid)
 					return "Content signed incorrect, SELL operation canceled";
-				
+
 				currentTransaction.setSignature(signedContent);
 				blockchain.addTransaction(currentTransaction);
 
@@ -579,9 +571,9 @@ public class TintolmarketServer {
 				System.out.println("DATA SIGNED IN BYTES " + signedContent);
 				currentTransaction.setSignature(signedContent);
 
-				//verificar assinatura
+				// verificar assinatura
 				boolean isSignatureValid = authValidator.verifySignature(dataToVerify, signedContent);
-				
+
 				if (!isSignatureValid)
 					return "Content signed incorrect, BUY operation canceled";
 
@@ -698,7 +690,7 @@ public class TintolmarketServer {
 				String clientIDDest) throws IOException, ClassNotFoundException {
 
 			String dataEncrypted = (String) inStream.readObject();
-			
+
 			if (userCatalog.exists(clientIDDest)) {
 
 				OutputStream addMessage = new FileOutputStream(messagesFilename, true);
@@ -707,7 +699,7 @@ public class TintolmarketServer {
 				if (messageCatalog.getSize() == 0)
 					messageRegist = (clientIDSender + ";" + clientIDDest + ";" + dataEncrypted);
 				else
-					messageRegist = ("\n" + clientIDSender + ";" + clientIDDest + ";" +  dataEncrypted);
+					messageRegist = ("\n" + clientIDSender + ";" + clientIDDest + ";" + dataEncrypted);
 
 				messageCatalog.add(new Mensagem(clientIDSender, clientIDDest, dataEncrypted));
 				synchronized (addMessage) {
@@ -727,31 +719,11 @@ public class TintolmarketServer {
 //			Map<String, byte[]> messages = new HashMap<>();
 			if (messageCatalog.existsMessagesFor(clientID)) {
 				ArrayList<Mensagem> messagesForClient = messageCatalog.getMessagesForClient(clientID);
-				
-				
-				byte[] decodedMessage = null;
+
 				for (Mensagem m : messagesForClient) {
-//					messages.put(m.getSender(), Base64.getDecoder().decode(m.getMessage()));
-					decodedMessage = Base64.getDecoder().decode(m.getMessage());
-					sb.append(m.getSender() + ":" + Base64.getDecoder().decode(m.getMessage()) + "\n");
+					sb.append(m.getSender() + ":" + m.getMessage() + "\n");
 					messageCatalog.remove(m);
 				}
-				
-//				KeyStore ksTemp;
-//				PrivateKey pkTemp;
-//				try {
-//					ksTemp = KeyStore.getInstance("JKS");
-//					ksTemp.load(new FileInputStream("./src/keys/client1Keys"), "client1Keys".toCharArray());
-//					pkTemp = (PrivateKey)ksTemp.getKey("client1Keys", "client1Keys".toCharArray());
-//					Cipher cipher = Cipher.getInstance("RSA");
-//					cipher.init(Cipher.DECRYPT_MODE, pkTemp);
-//					byte[] decryptedData = cipher.doFinal(decodedMessage);
-//					System.out.println("DECRYPTEDDDD " + new String(decryptedData));
-//					
-//				} catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException | UnrecoverableKeyException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException e) {
-//					e.printStackTrace();
-//				}
-				
 
 				File messagesFile = new File(filename);
 

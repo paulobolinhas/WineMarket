@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -29,7 +29,6 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
 import domain.entities.ClientAuthentication;
-import domain.entities.Mensagem;
 import domain.handlers.ReceiveImagesHandler;
 import domain.handlers.SendImagesHandler;
 
@@ -135,7 +134,8 @@ public class Tintolmarket {
 					System.out.println("Choose action:\n");
 
 					userAction = clientInterface.nextLine();
-					String[] userActionSplited = userAction.split(" "); //se a msg tiver mais do que uma palavra funciona?
+					String[] userActionSplited = userAction.split(" "); // se a msg tiver mais do que uma palavra
+					// funciona?
 
 					if (userActionSplited[0].equals("talk") || userActionSplited[0].equals("t")) {
 
@@ -155,20 +155,28 @@ public class Tintolmarket {
 						is.close();
 
 						PublicKey pk = c.getPublicKey();
-
 						Cipher cipher = Cipher.getInstance("RSA");
 						cipher.init(Cipher.ENCRYPT_MODE, pk);
 
 						// Encrypt the toEncrypt string
 						byte[] encryptedData = cipher.doFinal(toEncrypt.getBytes());
+						String encodedData = Base64.getEncoder().encodeToString(encryptedData);
+
+						// Pad the encoded string if necessary
+						int padding = (4 - encodedData.length() % 4) % 4;
+						if (padding > 0) {
+							encodedData += "=".repeat(padding);
+						}
 
 						userAction = userActionSplited[0] + " " + userActionSplited[1];
 						outStream.writeObject(userAction);
-						outStream.writeObject(Base64.getEncoder().encodeToString(encryptedData));
+						outStream.writeObject(encodedData);
+
 					} else {
 
 						outStream.writeObject(userAction);
 					}
+
 					if (userActionSplited[0].equals("add") || userActionSplited[0].equals("a")) {
 						SendImagesHandler sendImgHandler = new SendImagesHandler(outStream, "./src/imgClient/");
 						try {
@@ -199,30 +207,36 @@ public class Tintolmarket {
 					}
 
 					String result = (String) inStream.readObject();
-					
-					System.out.println("RESULT " + result);
-					if (userActionSplited[0].equals("read") || userActionSplited[0].equals("r")) {
-						
+
+					if ((userActionSplited[0].equals("read") || userActionSplited[0].equals("r"))
+							&& !result.equals("You dont have any message to read.")) {
+
 						Scanner sc = new Scanner(result);
-						
+
 						Cipher cipher = Cipher.getInstance("RSA");
 						cipher.init(Cipher.DECRYPT_MODE, clientAuth.getPrivateKey());
 						StringBuilder sb = new StringBuilder();
 						sb.append("Mensagens recebidas: \n");
-						
-						while(sc.hasNextLine()) {
+
+						while (sc.hasNextLine()) {
 							String currentLine = sc.nextLine();
 							String[] currentLineSplitted = currentLine.split(":");
-							System.out.println("CURRENT LINE " + currentLine);
 							String msgEncrypted = currentLineSplitted[1];
-							String msgDecrypted = decryptMessage(msgEncrypted, cipher);
-							sb.append(" Remetente: " + currentLineSplitted[0] + ";\n Mensagem: " + msgDecrypted + " \n\n");
-						}	
-						
+							try {
+								String msgDecrypted = decryptMessage(msgEncrypted, cipher);
+								sb.append(" Remetente: " + currentLineSplitted[0] + ";\n Mensagem: " + msgDecrypted
+										+ " \n\n");
+							} catch (IllegalArgumentException e) {
+								// Handle invalid base64 input
+								System.out.println("Error: " + e.getMessage());
+								continue;
+							}
+						}
+
 						result = sb.toString();
 						sc.close();
 					}
-					
+
 					System.out.println(result);
 
 					if ((userActionSplited[0].equals("view") || userActionSplited[0].equals("v"))
@@ -260,23 +274,28 @@ public class Tintolmarket {
 			System.out.println("I/O error: " + ex.getMessage());
 		}
 	}
-	
-	private static String decryptMessage(String msgEncrypted, Cipher cipher) throws IllegalBlockSizeException, BadPaddingException {
-		byte[] decryptedData = cipher.doFinal(msgEncrypted.getBytes());
-		return new String(decryptedData);
-	}
 
-	private static byte[] longToBytes(long x) {
-		ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
-		buffer.putLong(x);
-		return buffer.array();
-	}
+	private static String decryptMessage(String msgEncrypted, Cipher cipher)
+			throws IllegalBlockSizeException, BadPaddingException {
 
-	private static long bytesToLong(byte[] bytes) {
-		ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
-		buffer.put(bytes);
-		buffer.flip();// need flip
-		return buffer.getLong();
-	}
+		try {
+			// Remove any illegal characters from the input string
+			msgEncrypted = msgEncrypted.replaceAll("[^a-zA-Z0-9+/=]", "");
 
+			// Pad the input string if necessary
+			int padding = (4 - msgEncrypted.length() % 4) % 4;
+			if (padding > 0) {
+				msgEncrypted += "=".repeat(padding);
+			}
+
+			byte[] decodedData = Base64.getDecoder().decode(msgEncrypted);
+			byte[] decryptedData = cipher.doFinal(decodedData);
+			String decryptedString = new String(decryptedData, StandardCharsets.UTF_8);
+			return decryptedString;
+		} catch (IllegalArgumentException e) {
+			// Handle invalid base64 input
+			System.out.println("Error: " + e.getMessage());
+			return null;
+		}
+	}
 }

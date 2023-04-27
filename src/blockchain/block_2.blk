@@ -1,11 +1,11 @@
-hash: [B@28ee8a67
+hash: [B@13f61f40
 block_id: 2
 n_trx: 1
 --------
 TRANSACTION: 3
 type: Sell
-wine: v3
-number of units: 11
-price per unit: 1
+wine: w4
+number of units: 3
+price per unit: 3
 owner: 1
-owner signature: [B@302388c5
+owner signature: [B@51c824bd
