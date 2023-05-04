@@ -14,6 +14,9 @@ can add wines, indicate the quantity they supervised, rate each wine, and even s
 private messages to other users. Registered users must use an application
 client to interact with the server and use these features.
 
+The work consists of implementing the Tintolmarket system, which is a client-server type system offering a similar service to that of Vivino, 
+but allowing the purchase and sale of wines by system users. It has authentication security, signatures, cryptography, blockchain, hmac integrity, secure message exchange...
+
 # USAGE
 
 In order to run the project in IDE you must run TintolMarket class after run TintolMarketServer class. 
