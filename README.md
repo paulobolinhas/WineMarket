@@ -1,5 +1,3 @@
-The work consists of implementing the Tintolmarket system, which is a client-server type system offering a similar service to that of Vivino, but allowing the purchase and sale of wines by system users. Exists a server application "Tintolmarket server" that maintains information about registered users and wines listed, their value, classification and quantity made available by each user. The users can add wines, indicate the quantity they supervised, rate each wine, and even send private messages to other users. Registered users must use an application client to interact with the server and use these features.
-
 
 # CONTENTS
     * Introduction
