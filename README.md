@@ -70,9 +70,10 @@ For client to run the add function he must have the wine image in the local repo
 
 # CONTRIBUTORS
 
-Group SD-050
- João Santos nº 57103
- Paulo Bolinhas nº 56300
- Rui Martins nº 56283
+ Paulo Bolinhas 
+ 
+ João Santos
+
+ Rui Martins
 
 -------------------------------------------------------------------------------------------------# WineMarket
