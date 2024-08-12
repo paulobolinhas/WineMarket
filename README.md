@@ -53,6 +53,7 @@ and then run TintolMarket after run TintolMarketServer.
 
 Client must follow the actions menu input rules:
 
+---
 Actions:
 add <wine> <image>
 sell <wine> <value> <quantity>
@@ -63,6 +64,7 @@ classify <wine> <stars>
 talk <user> <message>
 read
 exit
+---
 
 For client to run the add function he must have the wine image in the local repository.
 
