@@ -53,7 +53,7 @@ and then run TintolMarket after run TintolMarketServer.
 
 Client must follow the actions menu input rules:
 
-Actions:
+**Actions Menu**
 - add <wine> <image>
 - sell <wine> <value> <quantity>
 - view <wine>
