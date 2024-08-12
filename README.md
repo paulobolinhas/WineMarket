@@ -64,7 +64,7 @@ Client must follow the actions menu input rules:
 - read
 - exit
 
-For client to run the add function he must have the wine image in the local repository.
+Note: For client to run the add function he must have the wine image in the local repository.
 
 # CONTRIBUTORS
 
